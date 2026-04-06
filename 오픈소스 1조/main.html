@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html class="dark" lang="ko">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Classic - 클래식 공연 플랫폼</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;700&family=Inter:wght@300;400;500;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="main.css" rel="stylesheet"/>
+<script id="tailwind-config">
+    tailwind.config = {
+        darkMode: "class",
+        theme: {
+            extend: {
+                colors: {
+                    "surface-bright":"#393939","secondary":"#ffb3b5","error":"#ffb4ab",
+                    "surface-container-lowest":"#0e0e0e","on-surface-variant":"#c4c7c7",
+                    "on-primary-fixed":"#241a00","on-secondary-container":"#ff989d",
+                    "surface":"#131313","on-secondary-fixed":"#40000b","surface-variant":"#353535",
+                    "secondary-container":"#8e0f28","surface-container":"#20201f",
+                    "primary-container":"#181100","inverse-primary":"#735c00","on-error":"#690005",
+                    "on-background":"#e5e2e1","outline":"#8e9192","inverse-surface":"#e5e2e1",
+                    "surface-tint":"#e9c349","secondary-fixed-dim":"#ffb3b5","on-primary":"#3c2f00",
+                    "on-tertiary-fixed":"#1b1c1b","on-primary-container":"#997a00","on-secondary":"#680018",
+                    "on-error-container":"#ffdad6","on-secondary-fixed-variant":"#8e0f28",
+                    "on-tertiary-container":"#7d7d7c","error-container":"#93000a","tertiary":"#c7c6c4",
+                    "on-tertiary-fixed-variant":"#464746","on-tertiary":"#303130","background":"#131313",
+                    "surface-dim":"#131313","surface-container-highest":"#353535",
+                    "primary-fixed-dim":"#e9c349","surface-container-low":"#1c1b1b",
+                    "tertiary-fixed":"#e3e2e0","on-surface":"#e5e2e1","secondary-fixed":"#ffdada",
+                    "tertiary-fixed-dim":"#c7c6c4","tertiary-container":"#111211","primary-fixed":"#ffe088",
+                    "inverse-on-surface":"#313030","surface-container-high":"#2a2a2a","primary":"#e9c349",
+                    "outline-variant":"#444748","on-primary-fixed-variant":"#574500"
+                },
+                fontFamily: {
+                    "headline":["Noto Serif KR","serif"],
+                    "body":["Inter","sans-serif"],
+                    "label":["Inter","sans-serif"]
+                },
+                borderRadius:{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},
+            },
+        },
+    }
+</script>
+</head>
+<body class="page-main bg-background text-on-background font-body selection:bg-primary selection:text-on-primary">
+
+<!-- 우측 슬라이드 인디케이터 -->
+<div class="slide-nav-dots" id="slideNavDots">
+    <button class="slide-nav-dot on" data-idx="0"></button>
+    <button class="slide-nav-dot" data-idx="1"></button>
+</div>
+
+<div class="fullpage-wrap" id="fullpageWrap">
+<div class="fp-section">
+
+<!-- ══════════════════════════════════════════
+    TOP NAVIGATION BAR
+══════════════════════════════════════════ -->
+<nav class="fixed top-0 w-full z-50 nav-wrapper">
+    <div class="relative bg-[#131313] border-b border-white/5 px-12 py-5 flex justify-between items-center z-50">
+        <a class="flex items-center gap-3 text-[#e9c349] hover:opacity-80 transition-opacity" href="main.html" aria-label="Classic 홈">
+            <span class="text-3xl font-serif tracking-[0.2em]">CLASSIC</span>
+        </a>
+        <div class="hidden md:flex flex-1 justify-center">
+            <div class="grid grid-cols-4 gap-0 w-full max-w-[640px] text-center">
+                <div><span class="nav-item font-['Noto_Serif_KR'] text-sm transition-colors duration-300 cursor-default text-white/70 hover:text-white">공연 찾기</span></div>
+                <div><span class="nav-item font-['Noto_Serif_KR'] text-sm transition-colors duration-300 cursor-default text-white/70 hover:text-white">작곡가</span></div>
+                <div><span class="nav-item font-['Noto_Serif_KR'] text-sm transition-colors duration-300 cursor-default text-white/70 hover:text-white">아티스트</span></div>
+                <div><span class="nav-item font-['Noto_Serif_KR'] text-sm transition-colors duration-300 cursor-default text-white/70 hover:text-white">공연장</span></div>
+            </div>
+        </div>
+        <div class="flex items-center space-x-6 text-[#e9c349]">
+            <span class="material-symbols-outlined cursor-pointer hover:scale-110 transition-transform">search</span>
+
+            <span class="material-symbols-outlined cursor-pointer hover:scale-110 transition-transform">account_circle</span>
+        </div>
+    </div>
+    <div class="mega-menu">
+        <div class="mega-inner">
+            <div class="mega-col">
+                <a href="공연찾기_장르별.html">장르별 조회</a>
+                <a href="공연찾기_장소별.html">장소별 조회</a>
+                <a href="공연찾기_기간별.html">기간별 조회</a>
+            </div>
+            <div class="mega-col">
+                <a href="작곡가.html?era=바로크">바로크</a>
+                <a href="작곡가.html?era=고전">고전</a>
+                <a href="작곡가.html?era=낭만">낭만</a>
+                <a href="작곡가.html?era=근현대">근현대</a>
+            </div>
+            <div class="mega-col">
+                <a href="아티스트.html?type=지휘자">지휘자</a>
+                <a href="아티스트.html?type=오케스트라">오케스트라</a>
+                <a href="아티스트.html?type=솔리스트">솔리스트</a>
+                <a href="아티스트.html?type=악장">악장</a>
+            </div>
+            <div class="mega-col">
+                <a href="공연장.html">공연장 조회</a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- ══════════════════════════════════════════
+    MAIN — 단일 화면 포스터 레이아웃
+══════════════════════════════════════════ -->
+<main class="main-layout">
+
+    <!-- 공연 전체보기 버튼 -->
+    <a href="공연찾기_장르별.html" class="view-all-btn">
+        공연 전체보기
+        <span class="view-all-plus">+</span>
+    </a>
+
+    <!-- 왼쪽: 큰 포스터 슬라이더 -->
+    <section class="main-featured">
+        <div class="featured-track" id="featured-track">
+
+            <div class="featured-slide is-active">
+                <div class="featured-img poster-ph">
+                    <span class="ph-label">concert1</span>
+                </div>
+                <div class="featured-gradient"></div>
+                <div class="featured-info">
+                    <span class="featured-tag">추천</span>
+                    <h2 class="featured-title">라흐마니노프<br/>피아노 협주곡 2번</h2>
+                    <p class="featured-date">2026. 4. 12 (일) 7:30PM · 롯데콘서트홀</p>
+                </div>
+            </div>
+
+            <div class="featured-slide">
+                <div class="featured-img poster-ph">
+                    <span class="ph-label">concert2</span>
+                </div>
+                <div class="featured-gradient"></div>
+                <div class="featured-info">
+                    <span class="featured-tag">추천</span>
+                    <h2 class="featured-title">베토벤<br/>교향곡 9번 합창</h2>
+                    <p class="featured-date">2026. 4. 28 (화) 7:30PM · 예술의전당</p>
+                </div>
+            </div>
+
+            <div class="featured-slide">
+                <div class="featured-img poster-ph">
+                    <span class="ph-label">concert3</span>
+                </div>
+                <div class="featured-gradient"></div>
+                <div class="featured-info">
+                    <span class="featured-tag">추천</span>
+                    <h2 class="featured-title">레이 첸<br/>바이올린 리사이틀</h2>
+                    <p class="featured-date">2026. 6. 4 (목) 7:30PM · 롯데콘서트홀</p>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="featured-dots" id="featured-dots">
+            <button class="fdot is-active" data-idx="0"></button>
+            <button class="fdot" data-idx="1"></button>
+            <button class="fdot" data-idx="2"></button>
+        </div>
+    </section>
+
+    <!-- 오른쪽: 포스터 그리드 -->
+    <section class="main-grid">
+
+        <div class="grid-top">
+            <article class="grid-card grid-card--wide" onclick="location.href='공연찾기_장르별.html'">
+                <div class="grid-img poster-ph"><span class="ph-label">concert4</span></div>
+                <div class="grid-gradient"></div>
+                <div class="grid-info">
+                    <p class="grid-title">2026 오르간 시리즈 I. 카메론 카펜터</p>
+                    <p class="grid-date">2026. 4. 7 · 롯데콘서트홀</p>
+                </div>
+            </article>
+            <article class="grid-card" onclick="location.href='공연찾기_장르별.html'">
+                <div class="grid-img poster-ph"><span class="ph-label">concert5</span></div>
+                <div class="grid-gradient"></div>
+                <div class="grid-info">
+                    <p class="grid-title">쇼팽 녹턴 전곡</p>
+                    <p class="grid-date">2026. 5. 3 · 예술의전당</p>
+                </div>
+            </article>
+        </div>
+
+        <div class="grid-bottom">
+            <article class="grid-card" onclick="location.href='공연찾기_장르별.html'">
+                <div class="grid-img poster-ph"><span class="ph-label">concert6</span></div>
+                <div class="grid-gradient"></div>
+                <div class="grid-info">
+                    <p class="grid-title">W 필하모닉 프로므나드</p>
+                    <p class="grid-date">2026. 5. 10 · 세종문화회관</p>
+                </div>
+            </article>
+            <article class="grid-card" onclick="location.href='공연찾기_장르별.html'">
+                <div class="grid-img poster-ph"><span class="ph-label">concert7</span></div>
+                <div class="grid-gradient"></div>
+                <div class="grid-info">
+                    <p class="grid-title">대니 구의 플레이리스트</p>
+                    <p class="grid-date">2026. 6. 1 · 롯데콘서트홀</p>
+                </div>
+            </article>
+            <article class="grid-card" onclick="location.href='공연찾기_장르별.html'">
+                <div class="grid-img poster-ph"><span class="ph-label">concert8</span></div>
+                <div class="grid-gradient"></div>
+                <div class="grid-info">
+                    <p class="grid-title">낭만주의 거장 말러</p>
+                    <p class="grid-date">2026. 7. 15 · KBS홀</p>
+                </div>
+            </article>
+        </div>
+
+    </section>
+
+    <!-- 스크롤 유도 -->
+    <div class="scroll-hint" id="scrollHint">
+        <span>Scroll</span>
+        <div class="scroll-hint-arrow"></div>
+    </div>
+
+</main>
+
+</div><!-- /fp-section 1 -->
+
+<!-- ══════════════════════════════════════════
+    SLIDE 2 — D-Day
+══════════════════════════════════════════ -->
+<div class="fp-section">
+    <div class="dday-section">
+        <div class="dday-bg-img"></div>
+        <div class="dday-bg-vignette"></div>
+        <div class="dday-inner">
+
+            <div class="dday-header">
+                <div>
+                    <div class="dday-eyebrow">
+                        <div class="dday-eyebrow-line"></div>
+                        <span class="dday-eyebrow-text">Closing Soon</span>
+                    </div>
+                    <h2 class="dday-title">D-Day</h2>
+                </div>
+                <a href="공연찾기_장르별.html" class="dday-viewall">전체 보기 →</a>
+            </div>
+
+            <div class="dday-grid">
+
+                <div class="dday-card">
+                    <div class="dday-poster">
+                        <img class="dday-poster-img" src="http://www.kopis.or.kr/upload/pfmPoster/PF_PF285941_260227_104911.gif" alt="랑랑 피아노 리사이틀">
+                        <div class="dday-poster-overlay"></div>
+                        <div class="dday-badge red">D-1</div>
+                        <div class="dday-poster-info">
+                            <div class="dday-pdate">2026.04.03 · 19:30</div>
+                            <div class="dday-ptitle">랑랑 피아노 리사이틀</div>
+                        </div>
+                    </div>
+                    <div class="dday-foot">
+                        <div class="dday-foot-dot"></div>
+                        <span class="dday-foot-venue">예술의전당 콘서트홀</span>
+                    </div>
+                </div>
+
+                <div class="dday-card">
+                    <div class="dday-poster">
+                        <img class="dday-poster-img" src="http://www.kopis.or.kr/upload/pfmPoster/PF_PF286968_260313_111453.gif" alt="라하브 샤니 뮌헨 필하모닉">
+                        <div class="dday-poster-overlay"></div>
+                        <div class="dday-badge red">D-3</div>
+                        <div class="dday-poster-info">
+                            <div class="dday-pdate">2026.04.05 · 20:00</div>
+                            <div class="dday-ptitle">라하브 샤니 & 뮌헨 필하모닉</div>
+                        </div>
+                    </div>
+                    <div class="dday-foot">
+                        <div class="dday-foot-dot"></div>
+                        <span class="dday-foot-venue">롯데콘서트홀</span>
+                    </div>
+                </div>
+
+                <div class="dday-card">
+                    <div class="dday-poster">
+                        <img class="dday-poster-img" src="http://www.kopis.or.kr/upload/pfmPoster/PF_PF285797_260225_152131.gif" alt="서울스프링실내악축제">
+                        <div class="dday-poster-overlay"></div>
+                        <div class="dday-badge gold">D-7</div>
+                        <div class="dday-poster-info">
+                            <div class="dday-pdate">2026.04.09 · 19:30</div>
+                            <div class="dday-ptitle">서울스프링실내악축제 개막공연</div>
+                        </div>
+                    </div>
+                    <div class="dday-foot">
+                        <div class="dday-foot-dot"></div>
+                        <span class="dday-foot-venue">예술의전당 IBK챔버홀</span>
+                    </div>
+                </div>
+
+                <div class="dday-card">
+                    <div class="dday-poster">
+                        <img class="dday-poster-img" src="http://www.kopis.or.kr/upload/pfmPoster/PF_PF285068_260212_131501.gif" alt="국립오페라단 베르테르">
+                        <div class="dday-poster-overlay"></div>
+                        <div class="dday-badge dim">D-14</div>
+                        <div class="dday-poster-info">
+                            <div class="dday-pdate">2026.04.16 · 19:00</div>
+                            <div class="dday-ptitle">국립오페라단 정기공연: 베르테르</div>
+                        </div>
+                    </div>
+                    <div class="dday-foot">
+                        <div class="dday-foot-dot"></div>
+                        <span class="dday-foot-venue">예술의전당 오페라극장</span>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div><!-- /fp-section 2 -->
+
+</div><!-- /fullpage-wrap -->
+
+<script src="main.js"></script>
+<script>
+(function() {
+    const wrap = document.getElementById('fullpageWrap');
+    const sections = document.querySelectorAll('.fp-section');
+    const navDots = document.querySelectorAll('.slide-nav-dot');
+    const scrollHint = document.getElementById('scrollHint');
+    const total = sections.length;
+    let current = 0;
+    let isAnimating = false;
+
+    function goTo(idx) {
+        if (idx < 0 || idx >= total || isAnimating) return;
+        isAnimating = true;
+        current = idx;
+
+        const target = idx * window.innerHeight;
+        const start = wrap.scrollTop;
+        const dist = target - start;
+        const duration = 900;
+        let startTime = null;
+
+        function easeInOut(t) {
+            return t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t + 2, 3) / 2;
+        }
+
+        function step(ts) {
+            if (!startTime) startTime = ts;
+            const elapsed = ts - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            wrap.scrollTop = start + dist * easeInOut(progress);
+            if (progress < 1) {
+                requestAnimationFrame(step);
+            } else {
+                wrap.scrollTop = target;
+                isAnimating = false;
+            }
+        }
+        requestAnimationFrame(step);
+
+        navDots.forEach(function(d, i) { d.classList.toggle('on', i === idx); });
+        if (scrollHint) scrollHint.style.opacity = idx === 0 ? '1' : '0';
+    }
+
+    // 마우스휠
+    wrap.addEventListener('wheel', function(e) {
+        e.preventDefault();
+        if (isAnimating) return;
+        if (e.deltaY > 0) goTo(current + 1);
+        else goTo(current - 1);
+    }, { passive: false });
+
+    // 인디케이터 클릭
+    navDots.forEach(function(d) {
+        d.addEventListener('click', function() {
+            goTo(parseInt(d.dataset.idx));
+        });
+    });
+
+    // scroll hint 클릭
+    if (scrollHint) {
+        scrollHint.addEventListener('click', function() { goTo(1); });
+    }
+
+    // 초기화
+    goTo(0);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html class="dark" lang="ko">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Classic - 아티스트</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;700&family=Inter:wght@300;400;500;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <link href="main.css" rel="stylesheet"/>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "surface-bright": "#393939",
+                        "secondary": "#ffb3b5",
+                        "error": "#ffb4ab",
+                        "surface-container-lowest": "#0e0e0e",
+                        "on-surface-variant": "#c4c7c7",
+                        "on-primary-fixed": "#241a00",
+                        "on-secondary-container": "#ff989d",
+                        "surface": "#131313",
+                        "on-secondary-fixed": "#40000b",
+                        "surface-variant": "#353535",
+                        "secondary-container": "#8e0f28",
+                        "surface-container": "#20201f",
+                        "primary-container": "#181100",
+                        "inverse-primary": "#735c00",
+                        "on-error": "#690005",
+                        "on-background": "#e5e2e1",
+                        "outline": "#8e9192",
+                        "inverse-surface": "#e5e2e1",
+                        "surface-tint": "#e9c349",
+                        "secondary-fixed-dim": "#ffb3b5",
+                        "on-primary": "#3c2f00",
+                        "on-tertiary-fixed": "#1b1c1b",
+                        "on-primary-container": "#997a00",
+                        "on-secondary": "#680018",
+                        "on-error-container": "#ffdad6",
+                        "on-secondary-fixed-variant": "#8e0f28",
+                        "on-tertiary-container": "#7d7d7c",
+                        "error-container": "#93000a",
+                        "tertiary": "#c7c6c4",
+                        "on-tertiary-fixed-variant": "#464746",
+                        "on-tertiary": "#303130",
+                        "background": "#131313",
+                        "surface-dim": "#131313",
+                        "surface-container-highest": "#353535",
+                        "primary-fixed-dim": "#e9c349",
+                        "surface-container-low": "#1c1b1b",
+                        "tertiary-fixed": "#e3e2e0",
+                        "on-surface": "#e5e2e1",
+                        "secondary-fixed": "#ffdada",
+                        "tertiary-fixed-dim": "#c7c6c4",
+                        "tertiary-container": "#111211",
+                        "primary-fixed": "#ffe088",
+                        "inverse-on-surface": "#313030",
+                        "surface-container-high": "#2a2a2a",
+                        "primary": "#e9c349",
+                        "outline-variant": "#444748",
+                        "on-primary-fixed-variant": "#574500"
+                    },
+                    fontFamily: {
+                        "headline": ["Noto Serif KR", "serif"],
+                        "body": ["Inter", "sans-serif"],
+                        "label": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        };
+    </script>
+</head>
+<body class="bg-background text-on-background font-body selection:bg-primary selection:text-on-primary">
+
+<!-- TOP NAVIGATION BAR -->
+<!-- ══════════════════════════════════════════
+    TOP NAVIGATION BAR
+══════════════════════════════════════════ -->
+<nav class="fixed top-0 w-full z-50 nav-wrapper">
+    <div class="relative bg-[#131313] border-b border-white/5 px-12 py-5 flex justify-between items-center z-50">
+
+        <!-- 로고 -->
+        <a
+            class="flex items-center gap-3 text-[#e9c349] hover:opacity-80 transition-opacity"
+            href="main.html"
+            aria-label="Classic 홈"
+        >
+            <span class="text-3xl font-serif tracking-[0.2em]">CLASSIC</span>
+        </a>
+
+        <!-- 네비게이션 메뉴 (4개) -->
+        <div class="hidden md:flex flex-1 justify-center">
+            <div class="grid grid-cols-4 gap-0 w-full max-w-[640px] text-center">
+                <div>
+                    <span class="nav-item font-['Noto_Serif_KR'] text-sm transition-colors duration-300 cursor-default text-white/70 hover:text-white">공연 찾기</span>
+                </div>
+                <div>
+                    <span class="nav-item font-['Noto_Serif_KR'] text-sm transition-colors duration-300 cursor-default text-white/70 hover:text-white">작곡가</span>
+                </div>
+                <div>
+                    <span class="nav-item font-['Noto_Serif_KR'] text-sm transition-colors duration-300 cursor-default text-white">아티스트</span>
+                </div>
+                <div>
+                    <span class="nav-item font-['Noto_Serif_KR'] text-sm transition-colors duration-300 cursor-default text-white/70 hover:text-white">공연장</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 우측 아이콘 -->
+        <div class="flex items-center space-x-6 text-[#e9c349]">
+            <span class="material-symbols-outlined cursor-pointer hover:scale-110 transition-transform">search</span>
+
+            <span class="material-symbols-outlined cursor-pointer hover:scale-110 transition-transform">account_circle</span>
+        </div>
+    </div>
+
+    <!-- ── 메가 드롭다운 ── -->
+    <div class="mega-menu">
+        <div class="mega-inner">
+
+            <!-- 컬럼 1: 공연 찾기 -->
+            <div class="mega-col">
+                <a href="공연찾기_장르별.html">장르별 조회</a>
+                <a href="공연찾기_장소별.html">장소별 조회</a>
+                <a href="공연찾기_기간별.html">기간별 조회</a>
+            </div>
+
+            <!-- 컬럼 2: 작곡가 -->
+            <div class="mega-col">
+                <a href="작곡가.html?era=바로크">바로크</a>
+                <a href="작곡가.html?era=고전">고전</a>
+                <a href="작곡가.html?era=낭만">낭만</a>
+                <a href="작곡가.html?era=근현대">근현대</a>
+            </div>
+
+            <!-- 컬럼 3: 아티스트 -->
+            <div class="mega-col">
+                <a href="아티스트.html?type=지휘자">지휘자</a>
+                <a href="아티스트.html?type=오케스트라">오케스트라</a>
+                <a href="아티스트.html?type=솔리스트">솔리스트</a>
+                <a href="아티스트.html?type=악장">악장</a>
+            </div>
+
+            <!-- 컬럼 4: 공연장 -->
+            <div class="mega-col">
+                <a href="공연장.html">공연장 조회</a>
+            </div>
+
+        </div>
+    </div>
+</nav>
+
+<main class="pt-32 min-h-screen bg-[#131313]">
+    <section class="max-w-[1440px] mx-auto px-6 md:px-12 py-12">
+        <div class="flex items-end justify-between mb-10">
+            <div>
+                <h1 class="font-headline text-4xl text-on-surface mb-2">아티스트</h1>
+                <div class="h-1 w-12 bg-primary"></div>
+            </div>
+        </div>
+
+        <!-- Filter (아티스트 목록 가장 상단) -->
+        <div class="mb-8">
+            <div id="artist-filter-options" class="flex flex-wrap gap-2"></div>
+        </div>
+
+        <div id="artist-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+    </section>
+</main>
+
+<footer class="bg-[#131313] w-full pt-24 pb-12 border-t border-white/5">
+    <div class="flex flex-col items-center justify-center space-y-8 w-full">
+        <div class="text-lg font-serif text-[#e9c349] mb-4">Classic</div>
+        <div class="flex flex-wrap justify-center gap-x-12 gap-y-4 px-12">
+            <a class="text-white/40 font-['Inter'] text-xs font-light tracking-widest uppercase hover:text-white transition-colors" href="공연찾기.html">공연 찾기</a>
+            <a class="text-white/40 font-['Inter'] text-xs font-light tracking-widest uppercase hover:text-white transition-colors" href="작곡가.html">작곡가</a>
+            <a class="text-white/40 font-['Inter'] text-xs font-light tracking-widest uppercase hover:text-white transition-colors" href="아티스트.html">아티스트</a>
+            <a class="text-white/40 font-['Inter'] text-xs font-light tracking-widest uppercase hover:text-white transition-colors" href="공연장.html">공연장</a>
+            <a class="text-white/40 font-['Inter'] text-xs font-light tracking-widest uppercase hover:text-white transition-colors" href="#">이용약관</a>
+            <a class="text-white/40 font-['Inter'] text-xs font-light tracking-widest uppercase hover:text-white transition-colors" href="#">개인정보처리방침</a>
+        </div>
+        <div class="text-white/20 text-[10px] font-label tracking-[0.3em] uppercase mt-12">
+            © 2024 Classic. ALL RIGHTS RESERVED.
+        </div>
+    </div>
+</footer>
+
+<script src="main.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // ══════════════════════════════════════════
+        // 아티스트 필터
+        // ══════════════════════════════════════════
+
+        let activeFilter = '전체';
+
+        const setFilter = (filterKey) => {
+            activeFilter = filterKey;
+            renderFilterOptions();
+            renderList();
+            const heading = document.getElementById('artist-filter-heading');
+            if (heading) heading.textContent = activeFilter;
+        };
+
+        // ══════════════════════════════════════════
+        // Mock Data
+        // ══════════════════════════════════════════
+        const filterOptions = ['전체', '지휘자', '오케스트라', '솔리스트', '악장'];
+
+        const artists = [
+            { id: 1, name: '김지훈', role: '지휘자' },
+            { id: 2, name: '박서연', role: '오케스트라' },
+            { id: 3, name: '이도현', role: '솔리스트' },
+            { id: 4, name: '정하린', role: '악장' },
+            { id: 5, name: '최민재', role: '지휘자' },
+            { id: 6, name: '오하영', role: '오케스트라' },
+            { id: 7, name: '한규민', role: '솔리스트' },
+            { id: 8, name: '문서연', role: '악장' },
+        ];
+
+        // ══════════════════════════════════════════
+        // Rendering
+        // ══════════════════════════════════════════
+        const filterOptionsEl = document.getElementById('artist-filter-options');
+        const listEl = document.getElementById('artist-list');
+
+        const pillClass = (isActive) => {
+            const base = 'text-xs px-3 py-2 rounded-full border transition-colors';
+            if (isActive) return `${base} bg-primary text-on-primary border-primary`;
+            return `${base} bg-white/5 border-white/10 text-white/70 hover:text-white hover:bg-white/10`;
+        };
+
+        const renderFilterOptions = () => {
+            if (!filterOptionsEl) return;
+            filterOptionsEl.innerHTML = '';
+            filterOptions.forEach((opt) => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.textContent = opt;
+                btn.className = pillClass(opt === activeFilter);
+                btn.addEventListener('click', () => setFilter(opt));
+                filterOptionsEl.appendChild(btn);
+            });
+        };
+
+        const getFilteredArtists = () => {
+            if (activeFilter === '전체') return artists;
+            return artists.filter((a) => a.role === activeFilter);
+        };
+
+        const renderList = () => {
+            if (!listEl) return;
+            const items = getFilteredArtists();
+            listEl.innerHTML = items.map((a, idx) => {
+                const imgSrc = idx % 2 === 0 ? 'artist1' : 'artist2';
+                return `
+                    <article class="rounded-xl bg-surface-container-low ring-1 ring-white/5 p-5">
+                        <div class="flex items-center gap-4">
+                            <div class="w-16 h-16 rounded-full bg-white/5 ring-1 ring-white/10 overflow-hidden flex-shrink-0">
+                                <img src="${imgSrc}" alt="${a.name}" class="w-full h-full object-cover" />
+                            </div>
+                            <div class="min-w-0">
+                                <div class="text-primary text-[10px] tracking-widest uppercase font-bold mb-1">${a.role}</div>
+                                <h2 class="font-headline text-xl text-on-surface truncate">${a.name}</h2>
+                                <p class="text-sm text-on-surface-variant font-light leading-relaxed">
+                                    클래식 공연에서 활동하는 ${a.role} 아티스트입니다.
+                                </p>
+                            </div>
+                        </div>
+                    </article>
+                `;
+            }).join('');
+        };
+
+        // Init — URL 파라미터로 초기 필터 적용
+        const typeParam = new URLSearchParams(location.search).get('type');
+        if (typeParam && filterOptions.includes(typeParam)) {
+            setFilter(typeParam);
+        } else {
+            setFilter('전체');
+        }
+    });
+</script>
+</body>
+</html>
