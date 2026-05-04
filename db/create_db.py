@@ -98,6 +98,7 @@ def create_database():
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         performance_id INTEGER,
         work_id INTEGER,
+        order_num INTEGER, -- 프로그램 내 연주 순서 (백엔드 API 호환성 보완)
         FOREIGN KEY (performance_id) REFERENCES Performance(id),
         FOREIGN KEY (work_id) REFERENCES Work(id)
     );

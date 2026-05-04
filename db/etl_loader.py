@@ -213,7 +213,7 @@ def run_etl_process():
                 composer_id = composer_result[0]
                 
                 # 2. 작품(Work) 테이블 적재 및 매핑
-                for work_title in works:
+                for work_idx, work_title in enumerate(works, start=1):
                     if not work_title: continue
                     
                     # Work 테이블에 해당 작곡가의 곡이 존재하는지 확인 후 삽입
@@ -226,11 +226,11 @@ def run_etl_process():
                     else:
                         work_id = work_result[0]
                     
-                    # 3. 공연-작품 교차(Mapping) 테이블 적재 (다대다 관계 해소)
+                    # 3. 공연-작품 교차(Mapping) 테이블 적재 (다대다 관계 해소 + 순서 번호 추가)
                     cursor.execute("""
-                        INSERT OR IGNORE INTO Performance_Work (performance_id, work_id)
-                        VALUES (?, ?)
-                    """, (perf_id, work_id))
+                        INSERT OR IGNORE INTO Performance_Work (performance_id, work_id, order_num)
+                        VALUES (?, ?, ?)
+                    """, (perf_id, work_id, work_idx))
 
         # 모든 반복문이 성공적으로 끝난 후, 메모리 상의 변경 사항을 물리적 DB 파일에 확정(Commit)합니다.
         conn.commit()
