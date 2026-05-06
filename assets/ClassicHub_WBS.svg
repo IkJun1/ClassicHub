@@ -1,0 +1,176 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1800" viewBox="0 0 1800 1800">
+<defs><style>
+.bg { fill: #f8fafc; }
+.title { font-family: "Apple SD Gothic Neo", "Malgun Gothic", Arial, sans-serif; font-size: 34px; font-weight: 700; fill: #111827; }
+.subtitle { font-family: "Apple SD Gothic Neo", "Malgun Gothic", Arial, sans-serif; font-size: 18px; fill: #4b5563; }
+.phase-title { font-family: "Apple SD Gothic Neo", "Malgun Gothic", Arial, sans-serif; font-size: 21px; font-weight: 700; fill: #111827; }
+.activity { font-family: "Apple SD Gothic Neo", "Malgun Gothic", Arial, sans-serif; font-size: 17px; font-weight: 700; fill: #1f2937; }
+.task { font-family: "Apple SD Gothic Neo", "Malgun Gothic", Arial, sans-serif; font-size: 14px; fill: #374151; }
+.meta { font-family: "Apple SD Gothic Neo", "Malgun Gothic", Arial, sans-serif; font-size: 14px; fill: #6b7280; }
+.line { stroke: #94a3b8; stroke-width: 2; fill: none; }
+</style></defs>
+<rect class="bg" x="0" y="0" width="1800" height="1800"/>
+<rect x="600" y="36" width="600" height="92" rx="14" fill="#ffffff" stroke="#334155"/>
+<text class="title" x="900" y="82" text-anchor="middle">ClassicHub WBS</text>
+<path class="line" d="M900 128 L900 178"/>
+<path class="line" d="M207 178 L1592 178"/>
+<path class="line" d="M207.0 178 L207.0 210"/>
+<rect x="52" y="210" width="310" height="62" rx="10" fill="#dbeafe" stroke="#60a5fa"/>
+<text class="phase-title" x="207.0" y="248" text-anchor="middle">1. 요구사항 분석</text>
+<line class="line" x1="207.0" y1="272" x2="207.0" y2="302"/>
+<rect x="62" y="302" width="290" height="54" rx="8" fill="#ffffff" stroke="#cbd5e1"/>
+<text class="activity" x="207.0" y="335" text-anchor="middle">1.1 요구사항 수집</text>
+<rect x="76" y="384" width="262" height="38" rx="7" fill="#ffffff" stroke="#e2e8f0"/>
+<text class="task" x="207.0" y="408" text-anchor="middle">KOPIS API 항목 조사</text>
+<rect x="76" y="429" width="262" height="38" rx="7" fill="#ffffff" stroke="#e2e8f0"/>
+<text class="task" x="207.0" y="453" text-anchor="middle">공연 정보 사이트 조사</text>
+<rect x="76" y="474" width="262" height="38" rx="7" fill="#ffffff" stroke="#e2e8f0"/>
+<text class="task" x="207.0" y="498" text-anchor="middle">사용자 기능 요구 정리</text>
+<line class="line" x1="207.0" y1="513" x2="207.0" y2="543"/>
+<rect x="62" y="543" width="290" height="54" rx="8" fill="#ffffff" stroke="#cbd5e1"/>
+<text class="activity" x="207.0" y="576" text-anchor="middle">1.2 명세서 작성</text>
+<rect x="76" y="625" width="262" height="38" rx="7" fill="#ffffff" stroke="#e2e8f0"/>
+<text class="task" x="207.0" y="649" text-anchor="middle">기능 요구사항 작성</text>
+<rect x="76" y="670" width="262" height="38" rx="7" fill="#ffffff" stroke="#e2e8f0"/>
+<text class="task" x="207.0" y="694" text-anchor="middle">비기능 요구사항 작성</text>
+<rect x="76" y="715" width="262" height="38" rx="7" fill="#ffffff" stroke="#e2e8f0"/>
+<text class="task" x="207.0" y="739" text-anchor="middle">유스케이스 명세 작성</text>
+<path class="line" d="M552.0 178 L552.0 210"/>
+<rect x="397" y="210" width="310" height="62" rx="10" fill="#ede9fe" stroke="#a78bfa"/>
+<text class="phase-title" x="552.0" y="248" text-anchor="middle">2. 계획</text>
+<line class="line" x1="552.0" y1="272" x2="552.0" y2="302"/>
+<rect x="407" y="302" width="290" height="54" rx="8" fill="#ffffff" stroke="#cbd5e1"/>
+<text class="activity" x="552.0" y="335" text-anchor="middle">2.1 계획서 작성</text>
+<rect x="421" y="384" width="262" height="38" rx="7" fill="#ffffff" stroke="#e2e8f0"/>
+<text class="task" x="552.0" y="408" text-anchor="middle">프로젝트 개요 작성</text>
+<rect x="421" y="429" width="262" height="38" rx="7" fill="#ffffff" stroke="#e2e8f0"/>
+<text class="task" x="552.0" y="453" text-anchor="middle">방법론·도구 작성</text>
+<rect x="421" y="474" width="262" height="38" rx="7" fill="#ffffff" stroke="#e2e8f0"/>
+<text class="task" x="552.0" y="498" text-anchor="middle">WBS·일정 작성</text>
+<line class="line" x1="552.0" y1="513" x2="552.0" y2="543"/>
+<rect x="407" y="543" width="290" height="54" rx="8" fill="#ffffff" stroke="#cbd5e1"/>
+<text class="activity" x="552.0" y="576" text-anchor="middle">2.2 일정·역할 확정</text>
+<rect x="421" y="625" width="262" height="38" rx="7" fill="#ffffff" stroke="#e2e8f0"/>
+<text class="task" x="552.0" y="649" text-anchor="middle">팀원별 역할 정리</text>
+<rect x="421" y="670" width="262" height="38" rx="7" fill="#ffffff" stroke="#e2e8f0"/>
+<text class="task" x="552.0" y="694" text-anchor="middle">주요 일정 확정</text>
+<rect x="421" y="715" width="262" height="38" rx="7" fill="#ffffff" stroke="#e2e8f0"/>
+<text class="task" x="552.0" y="739" text-anchor="middle">산출물 기준 정리</text>
+<path class="line" d="M897.0 178 L897.0 210"/>
+<rect x="742" y="210" width="310" height="62" rx="10" fill="#dcfce7" stroke="#4ade80"/>
+<text class="phase-title" x="897.0" y="248" text-anchor="middle">3. 설계</text>
+<line class="line" x1="897.0" y1="272" x2="897.0" y2="302"/>
+<rect x="752" y="302" width="290" height="54" rx="8" fill="#ffffff" stroke="#cbd5e1"/>
+<text class="activity" x="897.0" y="335" text-anchor="middle">3.1 UI 설계</text>
+<rect x="766" y="384" width="262" height="38" rx="7" fill="#ffffff" stroke="#e2e8f0"/>
+<text class="task" x="897.0" y="408" text-anchor="middle">메인 화면 설계</text>
+<rect x="766" y="429" width="262" height="38" rx="7" fill="#ffffff" stroke="#e2e8f0"/>
+<text class="task" x="897.0" y="453" text-anchor="middle">검색·필터 화면 설계</text>
+<rect x="766" y="474" width="262" height="38" rx="7" fill="#ffffff" stroke="#e2e8f0"/>
+<text class="task" x="897.0" y="498" text-anchor="middle">상세 화면 설계</text>
+<line class="line" x1="897.0" y1="513" x2="897.0" y2="543"/>
+<rect x="752" y="543" width="290" height="54" rx="8" fill="#ffffff" stroke="#cbd5e1"/>
+<text class="activity" x="897.0" y="576" text-anchor="middle">3.2 백엔드/API 설계</text>
+<rect x="766" y="625" width="262" height="38" rx="7" fill="#ffffff" stroke="#e2e8f0"/>
+<text class="task" x="897.0" y="649" text-anchor="middle">공연 조회 API 설계</text>
+<rect x="766" y="670" width="262" height="38" rx="7" fill="#ffffff" stroke="#e2e8f0"/>
+<text class="task" x="897.0" y="694" text-anchor="middle">통합 검색 API 설계</text>
+<rect x="766" y="715" width="262" height="38" rx="7" fill="#ffffff" stroke="#e2e8f0"/>
+<text class="task" x="897.0" y="739" text-anchor="middle">즐겨찾기 API 설계</text>
+<line class="line" x1="897.0" y1="754" x2="897.0" y2="784"/>
+<rect x="752" y="784" width="290" height="54" rx="8" fill="#ffffff" stroke="#cbd5e1"/>
+<text class="activity" x="897.0" y="817" text-anchor="middle">3.3 DB 설계</text>
+<rect x="766" y="866" width="262" height="38" rx="7" fill="#ffffff" stroke="#e2e8f0"/>
+<text class="task" x="897.0" y="890" text-anchor="middle">공연 테이블 설계</text>
+<rect x="766" y="911" width="262" height="38" rx="7" fill="#ffffff" stroke="#e2e8f0"/>
+<text class="task" x="897.0" y="935" text-anchor="middle">작곡가·아티스트 설계</text>
+<rect x="766" y="956" width="262" height="38" rx="7" fill="#ffffff" stroke="#e2e8f0"/>
+<text class="task" x="897.0" y="980" text-anchor="middle">관계 테이블 설계</text>
+<line class="line" x1="897.0" y1="995" x2="897.0" y2="1025"/>
+<rect x="752" y="1025" width="290" height="54" rx="8" fill="#ffffff" stroke="#cbd5e1"/>
+<text class="activity" x="897.0" y="1058" text-anchor="middle">3.4 데이터 수집 설계</text>
+<rect x="766" y="1107" width="262" height="38" rx="7" fill="#ffffff" stroke="#e2e8f0"/>
+<text class="task" x="897.0" y="1131" text-anchor="middle">KOPIS 수집 항목 설계</text>
+<rect x="766" y="1152" width="262" height="38" rx="7" fill="#ffffff" stroke="#e2e8f0"/>
+<text class="task" x="897.0" y="1176" text-anchor="middle">정제 흐름 설계</text>
+<rect x="766" y="1197" width="262" height="38" rx="7" fill="#ffffff" stroke="#e2e8f0"/>
+<text class="task" x="897.0" y="1221" text-anchor="middle">갱신 방식 설계</text>
+<line class="line" x1="897.0" y1="1236" x2="897.0" y2="1266"/>
+<rect x="752" y="1266" width="290" height="54" rx="8" fill="#ffffff" stroke="#cbd5e1"/>
+<text class="activity" x="897.0" y="1299" text-anchor="middle">3.5 설계 통합 검증</text>
+<rect x="766" y="1348" width="262" height="38" rx="7" fill="#ffffff" stroke="#e2e8f0"/>
+<text class="task" x="897.0" y="1372" text-anchor="middle">UI-API 데이터 흐름 검토</text>
+<rect x="766" y="1393" width="262" height="38" rx="7" fill="#ffffff" stroke="#e2e8f0"/>
+<text class="task" x="897.0" y="1417" text-anchor="middle">API-DB 연동 구조 검토</text>
+<rect x="766" y="1438" width="262" height="38" rx="7" fill="#ffffff" stroke="#e2e8f0"/>
+<text class="task" x="897.0" y="1462" text-anchor="middle">수집-DB 갱신 구조 검토</text>
+<path class="line" d="M1242.0 178 L1242.0 210"/>
+<rect x="1087" y="210" width="310" height="62" rx="10" fill="#ffedd5" stroke="#fb923c"/>
+<text class="phase-title" x="1242.0" y="248" text-anchor="middle">4. 구현</text>
+<line class="line" x1="1242.0" y1="272" x2="1242.0" y2="302"/>
+<rect x="1097" y="302" width="290" height="54" rx="8" fill="#ffffff" stroke="#cbd5e1"/>
+<text class="activity" x="1242.0" y="335" text-anchor="middle">4.1 프론트엔드 구현</text>
+<rect x="1111" y="384" width="262" height="38" rx="7" fill="#ffffff" stroke="#e2e8f0"/>
+<text class="task" x="1242.0" y="408" text-anchor="middle">메인 화면 구현</text>
+<rect x="1111" y="429" width="262" height="38" rx="7" fill="#ffffff" stroke="#e2e8f0"/>
+<text class="task" x="1242.0" y="453" text-anchor="middle">검색·필터 UI 구현</text>
+<rect x="1111" y="474" width="262" height="38" rx="7" fill="#ffffff" stroke="#e2e8f0"/>
+<text class="task" x="1242.0" y="498" text-anchor="middle">상세 화면 구현</text>
+<line class="line" x1="1242.0" y1="513" x2="1242.0" y2="543"/>
+<rect x="1097" y="543" width="290" height="54" rx="8" fill="#ffffff" stroke="#cbd5e1"/>
+<text class="activity" x="1242.0" y="576" text-anchor="middle">4.2 백엔드/API 구현</text>
+<rect x="1111" y="625" width="262" height="38" rx="7" fill="#ffffff" stroke="#e2e8f0"/>
+<text class="task" x="1242.0" y="649" text-anchor="middle">공연 조회 API 구현</text>
+<rect x="1111" y="670" width="262" height="38" rx="7" fill="#ffffff" stroke="#e2e8f0"/>
+<text class="task" x="1242.0" y="694" text-anchor="middle">통합 검색 API 구현</text>
+<rect x="1111" y="715" width="262" height="38" rx="7" fill="#ffffff" stroke="#e2e8f0"/>
+<text class="task" x="1242.0" y="739" text-anchor="middle">즐겨찾기 API 구현</text>
+<line class="line" x1="1242.0" y1="754" x2="1242.0" y2="784"/>
+<rect x="1097" y="784" width="290" height="54" rx="8" fill="#ffffff" stroke="#cbd5e1"/>
+<text class="activity" x="1242.0" y="817" text-anchor="middle">4.3 DB 구축</text>
+<rect x="1111" y="866" width="262" height="38" rx="7" fill="#ffffff" stroke="#e2e8f0"/>
+<text class="task" x="1242.0" y="890" text-anchor="middle">SQLite DB 구축</text>
+<rect x="1111" y="911" width="262" height="38" rx="7" fill="#ffffff" stroke="#e2e8f0"/>
+<text class="task" x="1242.0" y="935" text-anchor="middle">테이블 생성</text>
+<rect x="1111" y="956" width="262" height="38" rx="7" fill="#ffffff" stroke="#e2e8f0"/>
+<text class="task" x="1242.0" y="980" text-anchor="middle">관계 구조 반영</text>
+<line class="line" x1="1242.0" y1="995" x2="1242.0" y2="1025"/>
+<rect x="1097" y="1025" width="290" height="54" rx="8" fill="#ffffff" stroke="#cbd5e1"/>
+<text class="activity" x="1242.0" y="1058" text-anchor="middle">4.4 데이터 수집/정제 구현</text>
+<rect x="1111" y="1107" width="262" height="38" rx="7" fill="#ffffff" stroke="#e2e8f0"/>
+<text class="task" x="1242.0" y="1131" text-anchor="middle">KOPIS 데이터 수집</text>
+<rect x="1111" y="1152" width="262" height="38" rx="7" fill="#ffffff" stroke="#e2e8f0"/>
+<text class="task" x="1242.0" y="1176" text-anchor="middle">데이터 정제</text>
+<rect x="1111" y="1197" width="262" height="38" rx="7" fill="#ffffff" stroke="#e2e8f0"/>
+<text class="task" x="1242.0" y="1221" text-anchor="middle">DB 저장·갱신 처리</text>
+<line class="line" x1="1242.0" y1="1236" x2="1242.0" y2="1266"/>
+<rect x="1097" y="1266" width="290" height="54" rx="8" fill="#ffffff" stroke="#cbd5e1"/>
+<text class="activity" x="1242.0" y="1299" text-anchor="middle">4.5 통합 구현</text>
+<rect x="1111" y="1348" width="262" height="38" rx="7" fill="#ffffff" stroke="#e2e8f0"/>
+<text class="task" x="1242.0" y="1372" text-anchor="middle">FE-BE 연동</text>
+<rect x="1111" y="1393" width="262" height="38" rx="7" fill="#ffffff" stroke="#e2e8f0"/>
+<text class="task" x="1242.0" y="1417" text-anchor="middle">BE-DB 연동</text>
+<rect x="1111" y="1438" width="262" height="38" rx="7" fill="#ffffff" stroke="#e2e8f0"/>
+<text class="task" x="1242.0" y="1462" text-anchor="middle">수집 모듈 연동</text>
+<path class="line" d="M1587.0 178 L1587.0 210"/>
+<rect x="1432" y="210" width="310" height="62" rx="10" fill="#e5e7eb" stroke="#94a3b8"/>
+<text class="phase-title" x="1587.0" y="248" text-anchor="middle">5. 테스트</text>
+<line class="line" x1="1587.0" y1="272" x2="1587.0" y2="302"/>
+<rect x="1442" y="302" width="290" height="54" rx="8" fill="#ffffff" stroke="#cbd5e1"/>
+<text class="activity" x="1587.0" y="335" text-anchor="middle">5.1 단위 테스트</text>
+<rect x="1456" y="384" width="262" height="38" rx="7" fill="#ffffff" stroke="#e2e8f0"/>
+<text class="task" x="1587.0" y="408" text-anchor="middle">API 요청·응답 테스트</text>
+<rect x="1456" y="429" width="262" height="38" rx="7" fill="#ffffff" stroke="#e2e8f0"/>
+<text class="task" x="1587.0" y="453" text-anchor="middle">검색 조건 테스트</text>
+<rect x="1456" y="474" width="262" height="38" rx="7" fill="#ffffff" stroke="#e2e8f0"/>
+<text class="task" x="1587.0" y="498" text-anchor="middle">수집 모듈 테스트</text>
+<line class="line" x1="1587.0" y1="513" x2="1587.0" y2="543"/>
+<rect x="1442" y="543" width="290" height="54" rx="8" fill="#ffffff" stroke="#cbd5e1"/>
+<text class="activity" x="1587.0" y="576" text-anchor="middle">5.2 통합 테스트</text>
+<rect x="1456" y="625" width="262" height="38" rx="7" fill="#ffffff" stroke="#e2e8f0"/>
+<text class="task" x="1587.0" y="649" text-anchor="middle">FE-BE 연동 테스트</text>
+<rect x="1456" y="670" width="262" height="38" rx="7" fill="#ffffff" stroke="#e2e8f0"/>
+<text class="task" x="1587.0" y="694" text-anchor="middle">BE-DB 연동 테스트</text>
+<rect x="1456" y="715" width="262" height="38" rx="7" fill="#ffffff" stroke="#e2e8f0"/>
+<text class="task" x="1587.0" y="739" text-anchor="middle">즐겨찾기 인증 테스트</text>
+</svg>
