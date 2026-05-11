@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html class="dark" lang="ko">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>공연 찾기 — 장소별 · CLASSIC</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;700&family=Inter:wght@300;400;500;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="main.css" rel="stylesheet"/>
+<script id="tailwind-config">
+tailwind.config={darkMode:"class",theme:{extend:{colors:{"surface-bright":"#393939","secondary":"#ffb3b5","error":"#ffb4ab","surface-container-lowest":"#0e0e0e","on-surface-variant":"#c4c7c7","on-primary-fixed":"#241a00","on-secondary-container":"#ff989d","surface":"#131313","on-secondary-fixed":"#40000b","surface-variant":"#353535","secondary-container":"#8e0f28","surface-container":"#20201f","primary-container":"#181100","inverse-primary":"#735c00","on-error":"#690005","on-background":"#e5e2e1","outline":"#8e9192","inverse-surface":"#e5e2e1","surface-tint":"#e9c349","secondary-fixed-dim":"#ffb3b5","on-primary":"#3c2f00","on-tertiary-fixed":"#1b1c1b","on-primary-container":"#997a00","on-secondary":"#680018","on-error-container":"#ffdad6","on-secondary-fixed-variant":"#8e0f28","on-tertiary-container":"#7d7d7c","error-container":"#93000a","tertiary":"#c7c6c4","on-tertiary-fixed-variant":"#464746","on-tertiary":"#303130","background":"#131313","surface-dim":"#131313","surface-container-highest":"#353535","primary-fixed-dim":"#e9c349","surface-container-low":"#1c1b1b","tertiary-fixed":"#e3e2e0","on-surface":"#e5e2e1","secondary-fixed":"#ffdada","tertiary-fixed-dim":"#c7c6c4","tertiary-container":"#111211","primary-fixed":"#ffe088","inverse-on-surface":"#313030","surface-container-high":"#2a2a2a","primary":"#e9c349","outline-variant":"#444748","on-primary-fixed-variant":"#574500"},fontFamily:{"headline":["Noto Serif KR","serif"],"body":["Inter","sans-serif"],"label":["Inter","sans-serif"]},borderRadius:{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"}}}}
+</script>
+<style>
+body{background:#131313;color:#e5e2e1;font-family:'Inter',sans-serif;margin:0;}
+
+/* ── 지역 탭 ── */
+.region-tabs{display:flex;gap:0;overflow-x:auto;scrollbar-width:none;}
+.region-tabs::-webkit-scrollbar{display:none;}
+.region-tab{
+  position:relative;
+  font-family:'Noto Serif KR',serif;
+  font-size:13px;
+  letter-spacing:.04em;
+  color:rgba(255,255,255,.38);
+  background:none;
+  border:none;
+  cursor:pointer;
+  padding:.65rem 1.2rem;
+  transition:color .2s;
+  white-space:nowrap;
+  flex-shrink:0;
+}
+.region-tab::after{
+  content:'';
+  position:absolute;
+  bottom:-1px;left:0;right:0;
+  height:2px;
+  background:#e9c349;
+  transform:scaleX(0);
+  transition:transform .25s ease;
+}
+.region-tab:hover{color:rgba(255,255,255,.65);}
+.region-tab.on{color:#fff;}
+.region-tab.on::after{transform:scaleX(1);}
+
+/* ── 공연장 칩 섹션 ── */
+.venue-section{
+  padding:1.6rem 3rem;
+  border-bottom:1px solid rgba(255,255,255,.06);
+  background:linear-gradient(180deg,#161616 0%,#131313 100%);
+}
+.venue-section-label{
+  font-size:9px;
+  letter-spacing:.3em;
+  text-transform:uppercase;
+  color:rgba(233,195,73,.5);
+  margin-bottom:.85rem;
+}
+.venue-chips{display:flex;flex-wrap:wrap;gap:.6rem;}
+
+.chip{
+  display:inline-flex;
+  align-items:center;
+  gap:.4rem;
+  position:relative;
+  cursor:pointer;
+  padding:.42rem 1rem .42rem 1.1rem;
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:2px;
+  font-size:11.5px;
+  color:rgba(255,255,255,.5);
+  letter-spacing:.02em;
+  background:rgba(255,255,255,.03);
+  transition:all .18s;
+  user-select:none;
+}
+.chip:hover{
+  border-color:rgba(233,195,73,.5);
+  color:rgba(255,255,255,.85);
+  background:rgba(233,195,73,.06);
+}
+.chip.active{
+  border-color:#e9c349;
+  color:#e9c349;
+  background:rgba(233,195,73,.1);
+  font-weight:500;
+}
+.chip-count{
+  font-size:9.5px;
+  color:rgba(255,255,255,.22);
+  font-weight:400;
+  letter-spacing:0;
+  transition:color .18s;
+}
+.chip.active .chip-count{color:rgba(233,195,73,.55);}
+.chip:hover .chip-count{color:rgba(233,195,73,.4);}
+
+.chip-dot{
+  width:5px;height:5px;
+  border-radius:50%;
+  background:#e9c349;
+  opacity:0;
+  transition:opacity .18s;
+  flex-shrink:0;
+}
+.chip.active .chip-dot{opacity:1;}
+
+/* ── 카드 그리드 ── */
+.card-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;}
+
+.c-card{position:relative;overflow:hidden;cursor:pointer;background:#1c1b1b;border-radius:12px;transition:background .3s,transform .25s;}
+.c-card:hover{background:#202020;transform:translateY(-4px);}
+.c-poster{position:relative;aspect-ratio:3/4;background:linear-gradient(145deg,#1c1c1c,#242424);display:flex;align-items:center;justify-content:center;overflow:hidden;border-radius:12px 12px 0 0;}
+.c-poster img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center center;transition:transform .4s;}
+.c-card:hover .c-poster img{transform:scale(1.04);}
+.c-poster-ph{font-size:11px;color:rgba(255,255,255,.1);letter-spacing:.1em;}
+.c-poster-grad{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.75) 0%,transparent 55%);opacity:0;transition:opacity .3s;}
+.c-card:hover .c-poster-grad{opacity:1;}
+.c-info{padding:.9rem 1rem 1.1rem;}
+.c-venue-label{font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:#e9c349;opacity:.75;margin-bottom:4px;}
+.c-title{font-family:'Noto Serif KR',serif;font-size:13px;color:rgba(255,255,255,.88);line-height:1.45;margin-bottom:6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.c-date{font-size:10.5px;color:rgba(255,255,255,.35);letter-spacing:.04em;}
+.c-status{display:inline-block;font-size:8.5px;letter-spacing:.12em;padding:.15rem .45rem;border-radius:2px;margin-left:.4rem;}
+.c-status.upcoming{background:rgba(233,195,73,.12);color:rgba(233,195,73,.7);}
+.c-status.ongoing{background:rgba(100,200,120,.12);color:rgba(100,200,120,.7);}
+.c-status.done{background:rgba(255,255,255,.07);color:rgba(255,255,255,.28);}
+.c-card:hover .c-date{color:rgba(233,195,73,.6);}
+
+/* 결과 헤더 */
+.result-header{
+  display:flex;align-items:baseline;justify-content:space-between;
+  margin-bottom:1.4rem;
+}
+.result-title{font-family:'Noto Serif KR',serif;font-size:15px;color:rgba(255,255,255,.7);}
+.result-count{font-size:11px;color:rgba(255,255,255,.25);letter-spacing:.08em;}
+
+.empty{padding:5rem 0;text-align:center;font-size:12px;color:rgba(255,255,255,.18);letter-spacing:.1em;}
+
+/* 애니메이션 */
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+.fade-up{animation:fadeUp .28s ease both;}
+/* ── 상세 모달 ───────────────────────────────────────────── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.72);backdrop-filter:blur(3px);z-index:1000;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s ease;}
+.modal-overlay.open{opacity:1;pointer-events:all;}
+.modal-box{position:relative;width:min(820px,66vw);background:#111;border-radius:6px;overflow:hidden;display:grid;grid-template-columns:320px 1fr;transform:translateY(12px);transition:transform .25s ease;}
+.modal-overlay.open .modal-box{transform:translateY(0);}
+.modal-poster{position:relative;background:#0e0e0e;display:flex;align-items:center;justify-content:center;overflow:hidden;aspect-ratio:3/4;}
+.modal-poster-bg{position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 40px,rgba(255,255,255,.012) 40px,rgba(255,255,255,.012) 41px),linear-gradient(160deg,#141414,#0a0a0a);}
+.modal-poster img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+.modal-poster-ph{position:relative;z-index:1;font-family:'Cormorant Garamond',serif;font-size:11px;letter-spacing:.4em;color:rgba(255,255,255,.06);text-transform:uppercase;}
+.modal-poster-fade{position:absolute;inset:0;z-index:2;background:linear-gradient(to right,transparent 60%,#111 100%);}
+.modal-poster-top{position:absolute;top:0;left:0;right:0;height:80px;z-index:2;background:linear-gradient(to bottom,rgba(0,0,0,.35),transparent);}
+.modal-body{padding:30px 28px 24px 26px;display:flex;flex-direction:column;justify-content:space-between;overflow-y:auto;}
+.modal-xbtn{position:absolute;top:14px;right:16px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.6);font-size:18px;cursor:pointer;font-weight:300;z-index:10;line-height:1;transition:all .2s;}
+.modal-xbtn:hover{background:rgba(255,255,255,0.14);color:#fff;}
+.modal-eyebrow{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:13px;letter-spacing:.18em;color:rgba(233,195,73,.5);margin-bottom:10px;}
+.modal-title-row{display:flex;align-items:flex-start;gap:10px;margin-bottom:18px;}
+.modal-title{font-family:'Noto Serif KR',serif;font-size:19px;font-weight:700;color:#fff;line-height:1.45;flex:1;}
+
+.modal-rule{width:100%;height:1px;background:linear-gradient(to right,rgba(233,195,73,.35),transparent);margin-bottom:20px;}
+.modal-meta{display:flex;flex-direction:column;gap:14px;margin-bottom:28px;}
+.modal-mrow{display:flex;align-items:baseline;}
+.modal-mk{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.22);width:56px;flex-shrink:0;}
+.modal-mv{font-size:14px;color:rgba(255,255,255,.62);line-height:1.55;}
+.modal-mv.cast{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:13.5px;color:rgba(255,255,255,.45);}
+.modal-s{display:inline-block;font-size:10px;letter-spacing:.12em;padding:4px 11px;border-radius:2px;}
+.modal-s.upcoming{background:rgba(233,195,73,.08);color:rgba(233,195,73,.75);border:1px solid rgba(233,195,73,.15);}
+.modal-s.ongoing{background:rgba(100,200,130,.08);color:rgba(100,200,130,.75);border:1px solid rgba(100,200,130,.15);}
+.modal-s.done{background:rgba(255,255,255,.04);color:rgba(255,255,255,.28);border:1px solid rgba(255,255,255,.08);}
+.modal-foot{display:flex;align-items:center;justify-content:flex-end;padding-top:16px;border-top:1px solid rgba(255,255,255,.05);}
+.modal-close{font-size:8.5px;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.18);background:none;border:none;cursor:pointer;padding:0;transition:color .2s;}
+.modal-close:hover{color:rgba(255,255,255,.45);}
+.modal-kbtn{display:inline-flex;align-items:center;gap:8px;padding:10px 22px;background:transparent;border:1px solid rgba(233,195,73,.45);color:#e9c349;font-size:9px;font-weight:500;letter-spacing:.18em;text-transform:uppercase;border-radius:2px;cursor:pointer;text-decoration:none;transition:background .2s,border-color .2s;}
+.modal-kbtn:hover{background:rgba(233,195,73,.08);border-color:#e9c349;}
+.modal-kbtn svg{width:10px;height:10px;opacity:.8;}
+</style>
+</head>
+<body class="selection:bg-primary selection:text-on-primary">
+
+<nav class="fixed top-0 w-full z-50 nav-wrapper">
+    <div class="relative bg-[#131313] border-b border-white/5 px-12 py-5 flex justify-between items-center z-50">
+        <a class="flex items-center gap-3 text-[#e9c349] hover:opacity-80 transition-opacity" href="main.html" aria-label="Classic 홈">
+            <span class="text-3xl font-serif tracking-[0.2em]">CLASSIC</span>
+        </a>
+        <div class="hidden md:flex flex-1 justify-center">
+            <div class="grid grid-cols-4 gap-0 w-full max-w-[640px] text-center">
+                <div><span class="nav-item font-['Noto_Serif_KR'] text-sm cursor-default text-white transition-colors duration-300">공연 찾기</span></div>
+                <div><span class="nav-item font-['Noto_Serif_KR'] text-sm cursor-default text-white/70 hover:text-white transition-colors duration-300">작곡가</span></div>
+                <div><span class="nav-item font-['Noto_Serif_KR'] text-sm cursor-default text-white/70 hover:text-white transition-colors duration-300">아티스트</span></div>
+                <div><span class="nav-item font-['Noto_Serif_KR'] text-sm cursor-default text-white/70 hover:text-white transition-colors duration-300">공연장</span></div>
+            </div>
+        </div>
+        <div class="flex items-center space-x-6 text-[#e9c349]">
+            <span class="material-symbols-outlined cursor-pointer hover:scale-110 transition-transform">search</span>
+            <span class="material-symbols-outlined cursor-pointer hover:scale-110 transition-transform">account_circle</span>
+        </div>
+    </div>
+    <div class="mega-menu">
+        <div class="mega-inner">
+            <div class="mega-col"><a href="공연찾기_장르별.html">장르별 조회</a><a href="공연찾기_장소별.html">장소별 조회</a><a href="공연찾기_기간별.html">기간별 조회</a></div>
+            <div class="mega-col"><a href="작곡가.html?era=바로크">바로크</a><a href="작곡가.html?era=고전">고전</a><a href="작곡가.html?era=낭만">낭만</a><a href="작곡가.html?era=근현대">근현대</a></div>
+            <div class="mega-col"><a href="아티스트.html?type=지휘자">지휘자</a><a href="아티스트.html?type=오케스트라">오케스트라</a><a href="아티스트.html?type=솔리스트">솔리스트</a><a href="아티스트.html?type=악장">악장</a></div>
+            <div class="mega-col"><a href="공연장.html">공연장 조회</a></div>
+        </div>
+    </div>
+</nav>
+
+<main style="padding-top:72px;min-height:100vh;">
+
+    <!-- 페이지 헤더 -->
+    <div style="padding:2.2rem 3rem 0;border-bottom:1px solid rgba(255,255,255,.06);">
+        <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:1.8rem;">
+            <div>
+                <p style="font-size:10px;letter-spacing:.35em;text-transform:uppercase;color:#e9c349;opacity:.75;margin:0 0 .45rem;">Concert</p>
+                <h1 style="font-family:'Noto Serif KR',serif;font-size:clamp(1.5rem,2.8vw,2.2rem);font-weight:700;color:#fff;margin:0;letter-spacing:-.01em;">장소별 조회</h1>
+            </div>
+            
+        </div>
+        <!-- 지역 탭 -->
+        <div id="region-tabs" class="region-tabs" style="border-bottom:1px solid rgba(255,255,255,.07);padding-bottom:0;"></div>
+    </div>
+
+    <!-- 공연장 칩 -->
+    <div class="venue-section" id="venue-section">
+        <p class="venue-section-label">공연장 선택</p>
+        <div class="venue-chips" id="venue-chips"></div>
+    </div>
+
+    <!-- 결과 그리드 -->
+    <div style="padding:1.8rem 3rem 4rem;">
+        <!-- 상태 필터 + 결과 카운트 -->
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.6rem;margin-bottom:1.4rem;">
+            <div id="status-filters" style="display:flex;gap:.5rem;"></div>
+            <div class="result-header" style="margin-bottom:0;">
+                <span class="result-count" id="result-count"></span>
+            </div>
+        </div>
+        <div id="concert-grid" class="card-grid"></div>
+        <!-- 페이지네이션 -->
+        <div id="pagination" style="display:flex;justify-content:center;gap:.4rem;margin-top:2.5rem;flex-wrap:wrap;"></div>
+    </div>
+
+</main>
+
+<footer class="bg-[#131313] w-full pt-16 pb-10 border-t border-white/5">
+    <div class="flex flex-col items-center justify-center space-y-5 w-full">
+        <div class="text-base font-serif text-[#e9c349]">Classic</div>
+        <div class="flex flex-wrap justify-center gap-x-10 gap-y-3 px-12">
+            <a class="text-white/30 text-xs tracking-widest uppercase hover:text-white transition-colors" href="공연찾기_장르별.html">공연 찾기</a>
+            <a class="text-white/30 text-xs tracking-widest uppercase hover:text-white transition-colors" href="작곡가.html">작곡가</a>
+            <a class="text-white/30 text-xs tracking-widest uppercase hover:text-white transition-colors" href="아티스트.html">아티스트</a>
+            <a class="text-white/30 text-xs tracking-widest uppercase hover:text-white transition-colors" href="공연장.html">공연장</a>
+        </div>
+        <div class="text-white/15 text-[10px] tracking-[.3em] uppercase">© 2024 Classic. ALL RIGHTS RESERVED.</div>
+    </div>
+</footer>
+
+<script src="main.js"></script>
+<script>
+/* =====================================================================
+   ClassicHub — 장소별 조회 (공연찾기_장소별.html)
+   [백엔드 연동 포인트]
+   현재 더미 데이터 사용. 연동 시 fetchConcerts() 내 fetch 블록 활성화.
+   API: GET /api/concerts?region=서울&venue=예술의전당&page=1&size=20
+   응답: { total, page, size, items:[{id,title,startDate,venue,status,poster}] }
+===================================================================== */
+const DB = {
+    "서울": {
+        "예술의전당 [서울]": [
+            {"t":"빈 심포니 내한공연","d":"2026.05.26","p":"","s":"공연예정","r":"2시간","c":"안드레스 오로스코-에스트라다, 빈 심포니커 등","g":"교향곡"},
+            {"t":"메조소프라노 김가영 귀국 독창회","d":"2026.04.30","p":"","s":"공연예정","r":"1시간 30분","c":"김가영, 정호영 등","g":"가곡"},
+            {"t":"공원영 피아노 독주회: Shape of Water","d":"2026.05.22","p":"","s":"공연예정","r":"1시간 20분","c":"공원영","g":"피아노 소나타"}
+        ],
+        "롯데콘서트홀": [
+            {"t":"빈 심포니 내한공연 (05.25)","d":"2026.05.25","p":"","s":"공연예정","r":"2시간","c":"안드레스 오로스코-에스트라다, 빈 심포니커 등","g":"교향곡"},
+            {"t":"지브리 & 디즈니 오케스트라 콘서트","d":"2026.05.10","p":"","s":"공연예정","r":"1시간 50분","c":"코리아쿱오케스트라 등","g":"기타"}
+        ],
+        "세종문화회관": [
+            {"t":"이예지 귀국 바순 독주회","d":"2026.04.14","p":"","s":"공연예정"},
+            {"t":"나부코","d":"2026.04.09","p":"","s":"공연예정"}
+        ],
+        "금호아트홀 연세": [
+            {"t":"심소연 바이올린 독주회","d":"2026.04.12","p":"","s":"공연예정"},
+            {"t":"금호영아티스트콘서트","d":"2026.06.20","p":"","s":"공연예정"}
+        ],
+        "기타": [
+            {"t":"서울시향 퇴근길 콘서트","d":"2026.06.23","v":"LG아트센터 서울","p":"","s":"공연예정"}
+        ]
+    },
+    "경기": {
+        "성남아트센터": [
+            {"t":"제3회 어뮤징오케스트라 정기연주회","d":"2026.04.19","p":"","s":"공연예정"},
+            {"t":"지브리 & 디즈니 영화음악 FESTA","d":"2026.06.28","p":"","s":"공연예정"}
+        ],
+        "부천아트센터": [
+            {"t":"부천아트센터 개관 3주년: 클라라 주미 강 & 김선욱","d":"2026.05.21","p":"","s":"공연예정"},
+            {"t":"조수미 세계무대 데뷔 40주년 기념 콘서트","d":"2026.05.15","p":"","s":"공연예정"}
+        ],
+        "고양아람누리": [
+            {"t":"클래시컬 브릿지 국제 음악 페스티벌","d":"2026.06.07","p":"","s":"공연예정"},
+            {"t":"지브리 & 디즈니 영화음악 FESTA","d":"2026.03.21","p":"","s":"공연완료"}
+        ],
+        "평택아트센터": [
+            {"t":"클라라 주미 강 & 김선욱 듀오 리사이틀","d":"2026.05.22","p":"","s":"공연예정"}
+        ],
+        "기타": [
+            {"t":"조수미 세계무대 데뷔 40주년 [용인]","d":"2026.05.17","v":"용인포은아트홀","p":"","s":"공연예정"}
+        ]
+    },
+    "인천": {
+        "아트센터 인천": [
+            {"t":"라하브 샤니 & 뮌헨 필하모닉","d":"2026.05.08","p":"","s":"공연예정"},
+            {"t":"임윤찬 피아노 리사이틀","d":"2026.05.13","p":"","s":"공연예정"}
+        ],
+        "인천문화예술회관": [
+            {"t":"클래식시리즈 1. 우시다 토모하루 피아노 리사이틀","d":"2026.04.04","p":"","s":"공연예정"}
+        ],
+        "기타": [
+            {"t":"부평아트센터 안부시리즈: 베토벤, 합창","d":"2026.01.17","v":"부평아트센터","p":"","s":"공연완료"}
+        ]
+    },
+    "부산": {
+        "부산콘서트홀": [
+            {"t":"임윤찬 피아노 리사이틀","d":"2026.05.09","p":"","s":"공연예정"},
+            {"t":"케이팝 데몬 헌터스 OST 오케스트라 콘서트","d":"2026.05.03","p":"","s":"공연예정"}
+        ],
+        "부산문화회관": [
+            {"t":"부산시립교향악단 기획음악회: 우리 아이 음악회","d":"2026.05.06","p":"","s":"공연예정"}
+        ],
+        "기타": [
+            {"t":"백건우 피아노 리사이틀","d":"2026.04.03","v":"부산시민회관","p":"","s":"공연예정"}
+        ]
+    },
+    "대구": {
+        "대구콘서트하우스": [
+            {"t":"제524회 대구시립교향악단 정기연주회","d":"2026.04.17","p":"","s":"공연예정"},
+            {"t":"클라라 주미 강 & 김선욱 듀오 리사이틀","d":"2026.05.28","p":"","s":"공연예정"}
+        ],
+        "수성아트피아": [
+            {"t":"수성르네상스프로젝트, 젊은 예술가 리사이틀","d":"2026.04.29","p":"","s":"공연예정"}
+        ],
+        "대구문화예술회관": [
+            {"t":"백건우 피아노 리사이틀","d":"2026.05.07","p":"","s":"공연예정"}
+        ],
+        "기타": [
+            {"t":"선우예권 피아노 리사이틀","d":"2026.05.16","v":"달서아트센터","p":"","s":"공연예정"}
+        ]
+    },
+    "대전": {
+        "대전시립연정국악원": [
+            {"t":"제5회 트리오 스페스 정기연주회","d":"2026.03.31","p":"","s":"공연예정"},
+            {"t":"제50회 K-뮤직 필하모닉 오케스트라 정기연주회","d":"2026.05.31","p":"","s":"공연예정"}
+        ]
+    },
+    "광주": {
+        "광주 예술의 전당": [
+            {"t":"어린이날 기념 지브리 & 디즈니 OST 콘서트","d":"2026.05.05","p":"","s":"공연예정"},
+            {"t":"제405회 광주시립교향악단 정기연주회","d":"2026.04.10","p":"","s":"공연예정"}
+        ],
+        "국립아시아문화전당": [
+            {"t":"광주시립교향악단, GSO 체임버 시리즈 Ⅱ","d":"2026.04.23","p":"","s":"공연예정"}
+        ]
+    },
+    "울산": {
+        "울산문화예술회관": [
+            {"t":"케이팝 데몬 헌터스 OST 오케스트라 콘서트","d":"2026.05.02","p":"","s":"공연예정"},
+            {"t":"제250회 울산시립교향악단 정기연주회","d":"2026.05.29","p":"","s":"공연예정"}
+        ]
+    },
+    "강원": {
+        "강릉아트센터 (구. 강릉문화예술관)": [
+            {"t":"클라라 주미 강 & 김선욱 듀오 리사이틀","d":"2026.05.26","p":"","s":"공연예정"},
+            {"t":"지브리 & 디즈니 영화음악 FESTA","d":"2026.05.10","p":"","s":"공연예정"}
+        ],
+        "춘천문화예술회관": [
+            {"t":"대관령음악제, 강원의 사계 여름: 에스메 콰르텟","d":"2026.06.09","p":"","s":"공연예정"}
+        ]
+    },
+    "충남": {
+        "공주문예회관": [
+            {"t":"제209회 공주시충남교향악단 정기연주회","d":"2026.04.17","p":"","s":"공연예정"},
+            {"t":"지브리와 사랑에 빠지다: 지브리 영화음악 콘서트","d":"2026.05.10","p":"","s":"공연예정"}
+        ]
+    },
+    "경남": {
+        "통영국제음악당": [
+            {"t":"임윤찬 피아노 리사이틀","d":"2026.05.10","p":"","s":"공연예정"},
+            {"t":"백건우 피아노 리사이틀","d":"2026.05.05","p":"","s":"공연예정"}
+        ],
+        "성산아트홀": [
+            {"t":"조수미 세계무대 데뷔 40주년 기념 콘서트","d":"2026.05.09","p":"","s":"공연예정"}
+        ],
+        "기타": [
+            {"t":"백건우 피아노 리사이틀","d":"2026.04.03","v":"부산시민회관","p":"","s":"공연예정"}
+        ]
+    },
+    "경북": {
+        "구미시문화예술회관": [
+            {"t":"에든버러 페스티벌 우수작 초청 시리즈","d":"2026.06.20","p":"","s":"공연예정"}
+        ],
+        "포항문화예술회관": [
+            {"t":"제124회 포항시립합창단 정기연주회","d":"2026.04.09","p":"","s":"공연예정"},
+            {"t":"제222회 포항시립교향악단 정기연주회","d":"2026.04.02","p":"","s":"공연예정"}
+        ]
+    },
+    "전남": {
+        "GS칼텍스 예울마루": [
+            {"t":"김영욱 x 콜레기움 무지쿰 서울: 8 Seasons","d":"2026.05.07","p":"","s":"공연예정"},
+            {"t":"국립심포니오케스트라, 피터와 늑대","d":"2026.05.30","p":"","s":"공연예정"}
+        ],
+        "순천문화예술회관": [
+            {"t":"KBS교향악단과 함께하는 신년음악회","d":"2026.02.08","p":"","s":"공연완료"}
+        ]
+    },
+    "제주": {
+        "제주문예회관": [
+            {"t":"제182회 제주특별자치도립 제주교향악단 정기연주회","d":"2026.04.05","p":"","s":"공연예정"},
+            {"t":"제120회 제주특별자치도립 제주합창단 정기연주회","d":"2026.03.18","p":"","s":"공연완료"}
+        ]
+    }
+};
+
+// ── 공연장 표시 이름 매핑 ──
+const VENUE_LABELS = {
+    '예술의전당 [서울]': '예술의전당',
+    '롯데콘서트홀': '롯데콘서트홀',
+    '세종문화회관': '세종문화회관',
+    '금호아트홀 연세': '금호아트홀',
+    '국립극장': '국립극장',
+    '성남아트센터': '성남아트센터',
+    '부천아트센터': '부천아트센터',
+    '고양아람누리': '고양아람누리',
+    '평택아트센터': '평택아트센터',
+    '아트센터 인천': '아트센터인천',
+    '인천문화예술회관': '인천문화예술회관',
+    '부산콘서트홀': '부산콘서트홀',
+    '부산문화회관': '부산문화회관',
+    '(재) 영화의전당': '영화의전당',
+    '대구콘서트하우스': '대구콘서트하우스',
+    '수성아트피아': '수성아트피아',
+    '대구문화예술회관': '대구문화예술회관',
+    '대전시립연정국악원': '대전시립연정국악원',
+    '광주 예술의 전당': '광주예술의전당',
+    '국립아시아문화전당': '국립아시아문화전당',
+    '울산문화예술회관': '울산문화예술회관',
+    '강릉아트센터 (구. 강릉문화예술관)': '강릉아트센터',
+    '춘천문화예술회관': '춘천문화예술회관',
+    '공주문예회관': '공주문예회관',
+    '아산시 평생학습관(아산아트홀)': '아산아트홀',
+    '통영국제음악당': '통영국제음악당',
+    '성산아트홀': '성산아트홀',
+    '3.15아트센터': '3.15아트센터',
+    '경상남도문화예술회관': '경남문화예술회관',
+    '김해문화의전당': '김해문화의전당',
+    '함안문화예술회관': '함안문화예술회관',
+    '거제문화예술회관': '거제문화예술회관',
+    '구미시문화예술회관': '구미문화예술회관',
+    '포항문화예술회관': '포항문화예술회관',
+    '포항시청 대잠홀': '포항대잠홀',
+    'GS칼텍스 예울마루': 'GS예울마루',
+    '목포시민문화체육센터': '목포문화체육센터',
+    '순천문화예술회관': '순천문화예술회관',
+    '제주문예회관': '제주문예회관',
+    '오디토리움 [제주]': '오디토리움',
+    '제주호은아트센터(구.섬아이뮤직아트센터)': '제주호은아트센터',
+    '기타': '기타',
+};
+
+const REGIONS = Object.keys(DB);
+
+let activeRegion = REGIONS[0];
+let activeVenue = null;
+let currentPage = 1;
+const PAGE_SIZE = 20;
+
+const regionTabsEl = document.getElementById('region-tabs');
+const venueChipsEl = document.getElementById('venue-chips');
+const gridEl = document.getElementById('concert-grid');
+const paginEl = document.getElementById('pagination');
+const resultCountEl = document.getElementById('result-count');
+
+function getVenueLabel(key) {
+    return VENUE_LABELS[key] || key;
+}
+
+function renderRegionTabs() {
+    regionTabsEl.innerHTML = '';
+    REGIONS.forEach(r => {
+        const btn = document.createElement('button');
+        btn.className = 'region-tab' + (r === activeRegion ? ' on' : '');
+        btn.textContent = r;
+        btn.addEventListener('click', () => {
+            activeRegion = r;
+            activeVenue = null;
+            currentPage = 1;
+            renderRegionTabs();
+            renderVenueChips();
+            renderGrid();
+        });
+        regionTabsEl.appendChild(btn);
+    });
+}
+
+function renderVenueChips() {
+    venueChipsEl.innerHTML = '';
+    const regionData = DB[activeRegion] || {};
+    const venueKeys = Object.keys(regionData);
+    
+    if (venueKeys.length === 0) return;
+    
+    // 자동으로 첫 번째 venue 선택
+    if (!activeVenue || !regionData[activeVenue]) {
+        activeVenue = venueKeys[0];
+    }
+    
+    venueKeys.forEach((vk, i) => {
+        const count = regionData[vk].length;
+        const label = getVenueLabel(vk);
+        const chip = document.createElement('button');
+        chip.className = 'chip' + (vk === activeVenue ? ' active' : '');
+        chip.innerHTML = `<span class="chip-dot"></span>${label}<span class="chip-count">${count}</span>`;
+        chip.addEventListener('click', () => {
+            activeVenue = vk;
+            currentPage = 1;
+            renderVenueChips();
+            renderGrid();
+        });
+        venueChipsEl.appendChild(chip);
+    });
+}
+
+function getStatusClass(s) {
+    if (s === '공연예정') return 'upcoming';
+    if (s === '공연중') return 'ongoing';
+    return 'done';
+}
+function getStatusLabel(s) {
+    if (s === '공연예정') return '예정';
+    if (s === '공연중') return '진행중';
+    return '완료';
+}
+
+    // ── 모달 열기/닫기 ──────────────────────────────────────
+    window.openModal = function openModal(p) {
+        const overlay  = document.getElementById('concert-modal');
+        // 포스터
+        const img = document.getElementById('modal-poster-img');
+        const ph  = document.getElementById('modal-poster-ph');
+        if (p.poster) {
+            img.src = p.poster; img.alt = p.title;
+            img.style.display = 'block'; ph.style.display = 'none';
+        } else {
+            img.style.display = 'none'; ph.style.display = '';
+        }
+        // 텍스트 채우기
+        document.getElementById('modal-genre').textContent  = p.genre || '';
+        document.getElementById('modal-title').textContent  = p.title || '';
+        document.getElementById('modal-date').textContent   =
+            p.startDate === p.endDate ? p.startDate : p.startDate + ' ~ ' + p.endDate;
+        document.getElementById('modal-venue').textContent  = p.venue || '';
+        // 상태 뱃지
+        const sEl = document.getElementById('modal-status');
+        sEl.textContent = p.status || '';
+        sEl.className   = 'modal-s ' + getStatusClass(p.status);
+        // 런타임
+        const rtRow = document.getElementById('modal-runtime-row');
+        const rtEl  = document.getElementById('modal-runtime');
+        if (p.runtime) { rtEl.textContent = p.runtime; rtRow.style.display = 'flex'; }
+        else { rtRow.style.display = 'none'; }
+        // 출연진
+        const castRow = document.getElementById('modal-cast-row');
+        const castEl  = document.getElementById('modal-cast');
+        if (p.cast) { castEl.textContent = p.cast; castRow.style.display = 'flex'; }
+        else { castRow.style.display = 'none'; }
+        // KOPIS 링크
+        const kbtn = document.getElementById('modal-kopis-btn');
+        kbtn.href = p.kopisUrl || ('https://www.kopis.or.kr/por/db/pblprfr/pblprfrView.do?menuId=MNU_00010&pblprfrId=' + (p.id || ''));
+        // 열기
+        overlay.classList.add('open');
+        document.body.style.overflow = 'hidden';
+    }
+
+    window.closeModal = function() {
+        document.getElementById('concert-modal').classList.remove('open');
+        document.body.style.overflow = '';
+    };
+
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+
+    function renderPagination(total, page) {
+    if (!paginEl) return;
+    const pages = Math.ceil(total / PAGE_SIZE);
+    if (pages <= 1) { paginEl.innerHTML = ''; return; }
+    const btn = (i, active) =>
+        `<button onclick="goPage(${i})" style="padding:.4rem .75rem;background:${active?'#e9c349':'none'};border:1px solid ${active?'#e9c349':'rgba(255,255,255,.12)'};color:${active?'#131313':'rgba(255,255,255,.45)'};border-radius:4px;cursor:pointer;font-size:12px;min-width:32px;">${i}</button>`;
+    let html = `<button onclick="goPage(${page-1})" ${page<=1?'disabled':''} style="padding:.4rem .7rem;background:none;border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.45);border-radius:4px;cursor:pointer;font-size:12px;">‹</button>`;
+    for (let i = 1; i <= pages; i++) {
+        if (i===1||i===pages||(i>=page-2&&i<=page+2)) html += btn(i, i===page);
+        else if (i===page-3||i===page+3) html += `<span style="color:rgba(255,255,255,.25);padding:.4rem .2rem;">…</span>`;
+    }
+    html += `<button onclick="goPage(${page+1})" ${page>=pages?'disabled':''} style="padding:.4rem .7rem;background:none;border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.45);border-radius:4px;cursor:pointer;font-size:12px;">›</button>`;
+    paginEl.innerHTML = html;
+}
+
+window.goPage = function(p) {
+    currentPage = p;
+    renderGrid();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+function renderGrid() {
+    const regionData = DB[activeRegion] || {};
+    const allItems = regionData[activeVenue] || [];
+
+    // 결과 헤더
+    const label = getVenueLabel(activeVenue);
+    resultCountEl.textContent = allItems.length + '개 공연';
+
+    if (!allItems.length) {
+        gridEl.innerHTML = '<div class="empty">해당 공연장의 공연 정보가 없습니다.</div>';
+        if (paginEl) paginEl.innerHTML = '';
+        return;
+    }
+
+    // 페이지네이션 슬라이싱
+    const start = (currentPage - 1) * PAGE_SIZE;
+    const items = allItems.slice(start, start + PAGE_SIZE);
+
+    gridEl.innerHTML = items.map((p, i) => {
+        const sc = getStatusClass(p.s);
+        const sl = getStatusLabel(p.s);
+        const venue = p.v || activeVenue;
+        const venueLabel = getVenueLabel(venue);
+        return `
+        <article class="c-card fade-up" style="animation-delay:${Math.min(i,11)*0.03}s" data-idx="${i}">
+            <div class="c-poster">
+                <img src="${p.p}" alt="${p.t}" loading="lazy" onerror="this.style.display='none'">
+                <span class="c-poster-ph">CLASSIC</span>
+                <div class="c-poster-grad"></div>
+            </div>
+            <div class="c-info">
+                <p class="c-venue-label">${venueLabel}</p>
+                <p class="c-title">${p.t}</p>
+                <p class="c-date">${p.d}<span class="c-status ${sc}">${sl}</span></p>
+            </div>
+        </article>`;
+    }).join('');
+
+    renderPagination(allItems.length, currentPage);
+    // 카드 클릭 → 모달
+    gridEl.querySelectorAll('.c-card').forEach((card, i) => {
+        card.addEventListener('click', () => {
+            const p = items[+card.dataset.idx];
+            if (!p) return;
+            openModal({
+                id:        '',
+                title:     p.t,
+                startDate: p.d,
+                endDate:   p.d,
+                venue:     p.v || activeVenue,
+                genre:     p.g || '',
+                poster:    p.p || '',
+                status:    p.s,
+                runtime:   p.r || '',
+                cast:      p.c || '',
+            });
+        });
+    });
+}
+
+// 초기화
+const paramR = new URLSearchParams(location.search).get('region');
+const paramV = new URLSearchParams(location.search).get('venue');
+if (paramR && REGIONS.includes(paramR)) activeRegion = paramR;
+
+renderRegionTabs();
+renderVenueChips();
+if (paramV && DB[activeRegion]?.[paramV]) activeVenue = paramV;
+renderGrid();
+</script>
+
+<!-- ── 상세 모달 ── -->
+<div class="modal-overlay" id="concert-modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal-box">
+    <div class="modal-poster" id="modal-poster">
+      <div class="modal-poster-bg"></div>
+      <img id="modal-poster-img" src="" alt="" style="display:none;">
+      <span class="modal-poster-ph" id="modal-poster-ph">CLASSIC</span>
+      <div class="modal-poster-fade"></div>
+      <div class="modal-poster-top"></div>
+    </div>
+    <div class="modal-body">
+      <button class="modal-xbtn" onclick="closeModal()">×</button>
+      <div>
+        <p class="modal-eyebrow" id="modal-genre"></p>
+        <div class="modal-title-row">
+          <span class="modal-title" id="modal-title"></span>
+        </div>
+        <div class="modal-rule"></div>
+        <div class="modal-meta">
+          <div class="modal-mrow">
+            <span class="modal-mk">상태</span>
+            <span class="modal-mv"><span class="modal-s" id="modal-status"></span></span>
+          </div>
+          <div class="modal-mrow">
+            <span class="modal-mk">기간</span>
+            <span class="modal-mv" id="modal-date"></span>
+          </div>
+          <div class="modal-mrow">
+            <span class="modal-mk">장소</span>
+            <span class="modal-mv" id="modal-venue"></span>
+          </div>
+          <div class="modal-mrow" id="modal-runtime-row">
+            <span class="modal-mk">런타임</span>
+            <span class="modal-mv" id="modal-runtime"></span>
+          </div>
+          <div class="modal-mrow" id="modal-cast-row">
+            <span class="modal-mk">출연진</span>
+            <span class="modal-mv cast" id="modal-cast"></span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <a class="modal-kbtn" id="modal-kopis-btn" href="#" target="_blank" rel="noopener">
+          예매하기
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M7 7h10v10"/></svg>
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
