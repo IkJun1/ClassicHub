@@ -183,12 +183,32 @@ def run_etl_process():
 
     def parse_program_with_context(perf_id, program_text):
         if not program_text: return
-        lines = str(program_text).split('\n')
+        
+        # 1. 메타 노이즈 및 서술형 안내 문구 선제 제거
+        clean_text = str(program_text).strip()
+        noise_patterns = [
+            r'\[공연소개\]', r'\[프로그램\]', r'\[PROGRAM\]', r'\[Program\]',
+            r'▶\s*출연진', r'▶\s*프로그램', r'※\s*본\s*프로그램은.*',
+            r'■\s*프로그램', r'\*.*변경될\s*수\s*있습니다\.?'
+        ]
+        for pattern in noise_patterns:
+            clean_text = re.sub(pattern, '', clean_text)
+
+        # 2. 다중 구분자 대응 토큰화 (줄바꿈 외에 슬래시, 세미콜론 등으로 뭉친 문장 강제 해체)
+        # 단, 곡명 내부의 세미콜론이나 슬래시가 과도하게 쪼개지는 것을 방지하기 위해 문맥적 분할 적용
+        raw_lines = re.split(r'[\n/;\t]', clean_text)
+        
         last_comp_id = None
         order = 1
-        for line in lines:
+        
+        for line in raw_lines:
             line = line.strip()
             if not line: continue
+            
+            # 3. 길이 기반 1차 방어벽 (곡명이 3자 미만이거나 120자를 초과하면 해설글로 간주하고 스킵)
+            if len(line) < 3 or len(line) > 120:
+                continue
+                
             found_composer_key = None
             for key, aliases in MASTER_COMPOSERS.items():
                 if any(alias in line for alias in aliases):
@@ -209,8 +229,12 @@ def run_etl_process():
                 if found_composer_key:
                     for alias in MASTER_COMPOSERS[found_composer_key]:
                         work_title = work_title.replace(alias, "")
-                    work_title = re.sub(r'^[:\-\s]+', '', work_title).strip()
-                if not work_title: continue 
+                    # 문두에 남은 특수기호(: , - 등) 정제
+                    work_title = re.sub(r'^[:\-\s,·.]+', '', work_title).strip()
+                
+                # 정제 후 최종 곡명 길이 및 유효성 재검증
+                if not work_title or len(work_title) < 3 or len(work_title) > 100: 
+                    continue 
                 
                 # Work 테이블 캐싱 및 유무 확인 (중복 삽입 방지)
                 cache_key = (work_title, last_comp_id)
