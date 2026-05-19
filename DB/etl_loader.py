@@ -347,9 +347,17 @@ def run_etl_process():
 
         conn.commit()
         print(f"✅ 적재 성공: 공연 {counts['perf']}건, 아티스트 연결 {counts['artist']}건 (날짜 누락 스킵: {counts['skipped']}건)")
+        
     except Exception as e:
-        conn.rollback()
-        print(f"❌ 파이프라인 중단: {e}")
+        conn.rollback() # DB 롤백
+        
+        # [안정성 보완] DB가 롤백되었으므로, 파이썬 메모리의 캐시도 강제 초기화하여 동기화
+        genre_cache.clear()
+        artist_cache.clear()
+        composer_cache.clear()
+        work_cache.clear()
+        
+        print(f"❌ 파이프라인 중단 및 트랜잭션 롤백 완료: {e}")
     finally:
         conn.close()
 
