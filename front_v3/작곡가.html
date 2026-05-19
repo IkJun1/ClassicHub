@@ -192,89 +192,18 @@
 
 <script src="main.js"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        // ══════════════════════════════════════════
-        // Header Dropdown (시대별)
-        // ══════════════════════════════════════════
+    document.addEventListener('DOMContentLoaded', async () => {
+        const API = window.ClassicHubAPI;
+        let activePeriod = '전체';
+        let composers = [];
+        let periodOptions = ['전체'];
+
+        const filterOptionsEl = document.getElementById('composer-filter-options');
+        const listEl = document.getElementById('composer-list');
         const ddBtn = document.getElementById('nav-dd-btn-comp');
         const ddMenu = document.getElementById('nav-dd-menu-comp');
 
-        let activePeriod = '전체';
-
-        const periodToFilterKey = (period) => {
-            if (!period) return '전체';
-            const valid = ['바로크', '고전', '낭만', '근현대'];
-            return valid.includes(period) ? period : '전체';
-        };
-
-        const setFilter = (period) => {
-            activePeriod = periodToFilterKey(period);
-            renderFilterOptions();
-            renderList();
-            const heading = document.getElementById('composer-filter-heading');
-            if (heading) heading.textContent = activePeriod;
-        };
-
-        const close = () => {
-            if (!ddMenu || !ddBtn) return;
-            ddMenu.classList.add('hidden');
-            ddBtn.setAttribute('aria-expanded', 'false');
-        };
-
-        const open = () => {
-            if (!ddMenu || !ddBtn) return;
-            ddMenu.classList.remove('hidden');
-            ddBtn.setAttribute('aria-expanded', 'true');
-        };
-
-        if (ddBtn && ddMenu) {
-            ddBtn.addEventListener('click', (e) => {
-                // 호버 기반 UI이므로 클릭은 모드 선택 로직 방해만 안 하게 중단합니다.
-                e.stopPropagation();
-            });
-            ddMenu.addEventListener('click', (e) => {
-                const btn = e.target.closest('[data-period]');
-                if (!btn) return;
-                const period = btn.getAttribute('data-period');
-                close();
-                setFilter(period);
-            });
-            // 클릭 외부 닫기는 제거(호버 기반 UI)
-        }
-
-        // ══════════════════════════════════════════
-        // [백엔드 연동 포인트] 작곡가 데이터
-        // ══════════════════════════════════════════
-        // API 엔드포인트: GET /api/composers?era=바로크&page=1&size=20
-        // Query Parameters:
-        //   era  : "바로크" | "고전" | "낭만" | "근현대" (없으면 전체)
-        //   page : number
-        //   size : number
-        // 기대 응답: { total, page, size, items: [{id, name, period, bio, ...}] }
-        //
-        // 연동 시 renderList() 내 composers 배열을
-        // API 응답 items 배열로 교체하세요.
-        // ══════════════════════════════════════════
-        const periodOptions = ['전체', '바로크', '고전', '낭만', '근현대'];
-
-        const composers = [
-            { id: 1, name: '요한 제바스티안 바흐', period: '바로크' },
-            { id: 2, name: '조지프 하이든', period: '고전' },
-            { id: 3, name: '볼프강 아마데우스 모차르트', period: '고전' },
-            { id: 4, name: '루트비히 판 베토벤', period: '고전' },
-            { id: 5, name: '프란츠 슈베르트', period: '낭만' },
-            { id: 6, name: '리하르트 바그너', period: '낭만' },
-            { id: 7, name: '클로드 드뷔시', period: '근현대' },
-            { id: 8, name: '아르놀트 쇤베르크', period: '근현대' },
-            { id: 9, name: '구스타프 말러', period: '근현대' },
-        ];
-
-        // ══════════════════════════════════════════
-        // Rendering
-        // ══════════════════════════════════════════
-        const filterOptionsEl = document.getElementById('composer-filter-options');
-        const listEl = document.getElementById('composer-list');
-
+        const periodToFilterKey = (period) => periodOptions.includes(period) ? period : '전체';
         const pillClass = (isActive) => {
             const base = 'text-xs px-3 py-2 rounded-full border transition-colors';
             if (isActive) return `${base} bg-primary text-on-primary border-primary`;
@@ -289,9 +218,7 @@
                 btn.type = 'button';
                 btn.textContent = opt;
                 btn.className = pillClass(opt === activePeriod);
-                btn.addEventListener('click', () => {
-                    setFilter(opt);
-                });
+                btn.addEventListener('click', () => setFilter(opt));
                 filterOptionsEl.appendChild(btn);
             });
         };
@@ -300,31 +227,60 @@
             if (!listEl) return;
             const items = activePeriod === '전체'
                 ? composers
-                : composers.filter((c) => c.period === activePeriod);
+                : composers.filter((c) => c.era === activePeriod);
 
-            listEl.innerHTML = items.map((c) => {
-                return `
-                    <article class="rounded-xl bg-surface-container-low ring-1 ring-white/5 p-6">
-                        <div class="flex items-center justify-between mb-3">
-                            <span class="text-primary text-[10px] tracking-widest uppercase font-bold">${c.period}</span>
-                            <span class="text-white/40 text-xs">Composer</span>
-                        </div>
-                        <h2 class="font-headline text-2xl text-on-surface mb-3 leading-tight">${c.name}</h2>
-                        <p class="text-sm text-on-surface-variant font-light leading-relaxed">
-                            ${c.period} 시대의 대표 작품/특성을 기반으로 한 추천 작곡가입니다.
-                        </p>
-                    </article>
-                `;
-            }).join('');
+            if (!items.length) {
+                listEl.innerHTML = '<div class="text-white/35 text-sm">해당 시대의 작곡가 데이터가 없습니다.</div>';
+                return;
+            }
+
+            listEl.innerHTML = items.map((c) => `
+                <article class="rounded-xl bg-surface-container-low ring-1 ring-white/5 p-6">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-primary text-[10px] tracking-widest uppercase font-bold">${c.era || '미분류'}</span>
+                        <span class="text-white/40 text-xs">${c.work_count || 0} works</span>
+                    </div>
+                    <h2 class="font-headline text-2xl text-on-surface mb-3 leading-tight">${c.name}</h2>
+                    <p class="text-sm text-on-surface-variant font-light leading-relaxed">
+                        DB에 등록된 작품 ${c.work_count || 0}개와 연결된 작곡가입니다.
+                    </p>
+                </article>
+            `).join('');
         };
 
-        // Init — URL 파라미터로 초기 필터 적용
-        const eraParam = new URLSearchParams(location.search).get('era');
-        if (eraParam && periodOptions.includes(eraParam)) {
-            setFilter(eraParam);
-        } else {
-            setFilter('전체');
+        function setFilter(period) {
+            activePeriod = periodToFilterKey(period);
+            renderFilterOptions();
+            renderList();
         }
+
+        if (ddBtn && ddMenu) {
+            ddBtn.addEventListener('click', (e) => e.stopPropagation());
+            ddMenu.addEventListener('click', (e) => {
+                const btn = e.target.closest('[data-period]');
+                if (!btn) return;
+                setFilter(btn.getAttribute('data-period'));
+            });
+        }
+
+        listEl.innerHTML = '<div class="text-white/35 text-sm">작곡가 데이터를 불러오는 중입니다.</div>';
+        try {
+            const res = await API.getComposers({});
+            composers = (res.data || []).map(c => ({
+                id: c.id,
+                name: c.name,
+                era: c.era || '미분류',
+                work_count: c.work_count || 0,
+            }));
+            const eras = [...new Set(composers.map(c => c.era || '미분류'))].sort((a, b) => a.localeCompare(b, 'ko'));
+            periodOptions = ['전체', ...eras];
+        } catch (e) {
+            console.error('작곡가 목록 조회 실패:', e);
+            composers = [];
+        }
+
+        const eraParam = new URLSearchParams(location.search).get('era');
+        setFilter(periodToFilterKey(eraParam));
     });
 </script>
 </body>

@@ -189,50 +189,12 @@
 
 <script src="main.js"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        // ══════════════════════════════════════════
-        // 아티스트 필터
-        // ══════════════════════════════════════════
-
+    document.addEventListener('DOMContentLoaded', async () => {
+        const API = window.ClassicHubAPI;
         let activeFilter = '전체';
+        let artists = [];
+        let filterOptions = ['전체'];
 
-        const setFilter = (filterKey) => {
-            activeFilter = filterKey;
-            renderFilterOptions();
-            renderList();
-            const heading = document.getElementById('artist-filter-heading');
-            if (heading) heading.textContent = activeFilter;
-        };
-
-        // ══════════════════════════════════════════
-        // [백엔드 연동 포인트] 아티스트 데이터
-        // ══════════════════════════════════════════
-        // API 엔드포인트: GET /api/artists?type=지휘자&page=1&size=20
-        // Query Parameters:
-        //   type : "지휘자" | "오케스트라" | "솔리스트" | "악장" (없으면 전체)
-        //   page : number
-        //   size : number
-        // 기대 응답: { total, page, size, items: [{id, name, role, bio, ...}] }
-        //
-        // 연동 시 renderList() 내 artists 배열을
-        // API 응답 items 배열로 교체하세요.
-        // ══════════════════════════════════════════
-        const filterOptions = ['전체', '지휘자', '오케스트라', '솔리스트', '악장'];
-
-        const artists = [
-            { id: 1, name: '김지훈', role: '지휘자' },
-            { id: 2, name: '박서연', role: '오케스트라' },
-            { id: 3, name: '이도현', role: '솔리스트' },
-            { id: 4, name: '정하린', role: '악장' },
-            { id: 5, name: '최민재', role: '지휘자' },
-            { id: 6, name: '오하영', role: '오케스트라' },
-            { id: 7, name: '한규민', role: '솔리스트' },
-            { id: 8, name: '문서연', role: '악장' },
-        ];
-
-        // ══════════════════════════════════════════
-        // Rendering
-        // ══════════════════════════════════════════
         const filterOptionsEl = document.getElementById('artist-filter-options');
         const listEl = document.getElementById('artist-list');
 
@@ -257,25 +219,29 @@
 
         const getFilteredArtists = () => {
             if (activeFilter === '전체') return artists;
-            return artists.filter((a) => a.role === activeFilter);
+            return artists.filter((a) => (a.role || '미분류') === activeFilter);
         };
 
         const renderList = () => {
             if (!listEl) return;
             const items = getFilteredArtists();
+            if (!items.length) {
+                listEl.innerHTML = '<div class="text-white/35 text-sm">해당 역할의 아티스트 데이터가 없습니다. 현재 DB의 Artist.role 값이 비어 있을 수 있습니다.</div>';
+                return;
+            }
             listEl.innerHTML = items.map((a, idx) => {
-                const imgSrc = idx % 2 === 0 ? 'artist1' : 'artist2';
+                const role = a.role || '역할 미분류';
                 return `
                     <article class="rounded-xl bg-surface-container-low ring-1 ring-white/5 p-5">
                         <div class="flex items-center gap-4">
-                            <div class="w-16 h-16 rounded-full bg-white/5 ring-1 ring-white/10 overflow-hidden flex-shrink-0">
-                                <img src="${imgSrc}" alt="${a.name}" class="w-full h-full object-cover" />
+                            <div class="w-16 h-16 rounded-full bg-white/5 ring-1 ring-white/10 overflow-hidden flex-shrink-0 flex items-center justify-center text-primary font-headline text-xl">
+                                ${(a.name || '?').slice(0, 1)}
                             </div>
                             <div class="min-w-0">
-                                <div class="text-primary text-[10px] tracking-widest uppercase font-bold mb-1">${a.role}</div>
+                                <div class="text-primary text-[10px] tracking-widest uppercase font-bold mb-1">${role}</div>
                                 <h2 class="font-headline text-xl text-on-surface truncate">${a.name}</h2>
                                 <p class="text-sm text-on-surface-variant font-light leading-relaxed">
-                                    클래식 공연에서 활동하는 ${a.role} 아티스트입니다.
+                                    DB에 등록된 클래식 공연 아티스트입니다.
                                 </p>
                             </div>
                         </div>
@@ -284,13 +250,27 @@
             }).join('');
         };
 
-        // Init — URL 파라미터로 초기 필터 적용
-        const typeParam = new URLSearchParams(location.search).get('type');
-        if (typeParam && filterOptions.includes(typeParam)) {
-            setFilter(typeParam);
-        } else {
-            setFilter('전체');
+        function setFilter(filterKey) {
+            activeFilter = filterKey;
+            renderFilterOptions();
+            renderList();
         }
+
+        listEl.innerHTML = '<div class="text-white/35 text-sm">아티스트 데이터를 불러오는 중입니다.</div>';
+        try {
+            const res = await API.getArtists({});
+            artists = (res.data || [])
+                .filter(a => a.name && a.name !== 'nan')
+                .map(a => ({ id: a.id, name: a.name, role: a.role || '미분류' }));
+            const roles = [...new Set(artists.map(a => a.role || '미분류'))].sort((a, b) => a.localeCompare(b, 'ko'));
+            filterOptions = ['전체', ...roles];
+        } catch (e) {
+            console.error('아티스트 목록 조회 실패:', e);
+            artists = [];
+        }
+
+        const typeParam = new URLSearchParams(location.search).get('type');
+        setFilter(typeParam && filterOptions.includes(typeParam) ? typeParam : '전체');
     });
 </script>
 </body>

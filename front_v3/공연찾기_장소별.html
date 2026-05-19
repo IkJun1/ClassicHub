@@ -260,292 +260,150 @@ body{background:#131313;color:#e5e2e1;font-family:'Inter',sans-serif;margin:0;}
 <script src="main.js"></script>
 <script>
 /* =====================================================================
-   ClassicHub — 장소별 조회 (공연찾기_장소별.html)
-   [백엔드 연동 포인트]
-   현재 더미 데이터 사용. 연동 시 fetchConcerts() 내 fetch 블록 활성화.
-   API: GET /api/concerts?region=서울&venue=예술의전당&page=1&size=20
-   응답: { total, page, size, items:[{id,title,startDate,venue,status,poster}] }
+   ClassicHub — 장소별 조회 (백엔드 연동)
+   API: GET /api/venues/by-region, GET /api/performances?venue=...
 ===================================================================== */
-const DB = {
-    "서울": {
-        "예술의전당 [서울]": [
-            {"t":"빈 심포니 내한공연","d":"2026.05.26","p":"","s":"공연예정","r":"2시간","c":"안드레스 오로스코-에스트라다, 빈 심포니커 등","g":"교향곡"},
-            {"t":"메조소프라노 김가영 귀국 독창회","d":"2026.04.30","p":"","s":"공연예정","r":"1시간 30분","c":"김가영, 정호영 등","g":"가곡"},
-            {"t":"공원영 피아노 독주회: Shape of Water","d":"2026.05.22","p":"","s":"공연예정","r":"1시간 20분","c":"공원영","g":"피아노 소나타"}
-        ],
-        "롯데콘서트홀": [
-            {"t":"빈 심포니 내한공연 (05.25)","d":"2026.05.25","p":"","s":"공연예정","r":"2시간","c":"안드레스 오로스코-에스트라다, 빈 심포니커 등","g":"교향곡"},
-            {"t":"지브리 & 디즈니 오케스트라 콘서트","d":"2026.05.10","p":"","s":"공연예정","r":"1시간 50분","c":"코리아쿱오케스트라 등","g":"기타"}
-        ],
-        "세종문화회관": [
-            {"t":"이예지 귀국 바순 독주회","d":"2026.04.14","p":"","s":"공연예정"},
-            {"t":"나부코","d":"2026.04.09","p":"","s":"공연예정"}
-        ],
-        "금호아트홀 연세": [
-            {"t":"심소연 바이올린 독주회","d":"2026.04.12","p":"","s":"공연예정"},
-            {"t":"금호영아티스트콘서트","d":"2026.06.20","p":"","s":"공연예정"}
-        ],
-        "기타": [
-            {"t":"서울시향 퇴근길 콘서트","d":"2026.06.23","v":"LG아트센터 서울","p":"","s":"공연예정"}
-        ]
-    },
-    "경기": {
-        "성남아트센터": [
-            {"t":"제3회 어뮤징오케스트라 정기연주회","d":"2026.04.19","p":"","s":"공연예정"},
-            {"t":"지브리 & 디즈니 영화음악 FESTA","d":"2026.06.28","p":"","s":"공연예정"}
-        ],
-        "부천아트센터": [
-            {"t":"부천아트센터 개관 3주년: 클라라 주미 강 & 김선욱","d":"2026.05.21","p":"","s":"공연예정"},
-            {"t":"조수미 세계무대 데뷔 40주년 기념 콘서트","d":"2026.05.15","p":"","s":"공연예정"}
-        ],
-        "고양아람누리": [
-            {"t":"클래시컬 브릿지 국제 음악 페스티벌","d":"2026.06.07","p":"","s":"공연예정"},
-            {"t":"지브리 & 디즈니 영화음악 FESTA","d":"2026.03.21","p":"","s":"공연완료"}
-        ],
-        "평택아트센터": [
-            {"t":"클라라 주미 강 & 김선욱 듀오 리사이틀","d":"2026.05.22","p":"","s":"공연예정"}
-        ],
-        "기타": [
-            {"t":"조수미 세계무대 데뷔 40주년 [용인]","d":"2026.05.17","v":"용인포은아트홀","p":"","s":"공연예정"}
-        ]
-    },
-    "인천": {
-        "아트센터 인천": [
-            {"t":"라하브 샤니 & 뮌헨 필하모닉","d":"2026.05.08","p":"","s":"공연예정"},
-            {"t":"임윤찬 피아노 리사이틀","d":"2026.05.13","p":"","s":"공연예정"}
-        ],
-        "인천문화예술회관": [
-            {"t":"클래식시리즈 1. 우시다 토모하루 피아노 리사이틀","d":"2026.04.04","p":"","s":"공연예정"}
-        ],
-        "기타": [
-            {"t":"부평아트센터 안부시리즈: 베토벤, 합창","d":"2026.01.17","v":"부평아트센터","p":"","s":"공연완료"}
-        ]
-    },
-    "부산": {
-        "부산콘서트홀": [
-            {"t":"임윤찬 피아노 리사이틀","d":"2026.05.09","p":"","s":"공연예정"},
-            {"t":"케이팝 데몬 헌터스 OST 오케스트라 콘서트","d":"2026.05.03","p":"","s":"공연예정"}
-        ],
-        "부산문화회관": [
-            {"t":"부산시립교향악단 기획음악회: 우리 아이 음악회","d":"2026.05.06","p":"","s":"공연예정"}
-        ],
-        "기타": [
-            {"t":"백건우 피아노 리사이틀","d":"2026.04.03","v":"부산시민회관","p":"","s":"공연예정"}
-        ]
-    },
-    "대구": {
-        "대구콘서트하우스": [
-            {"t":"제524회 대구시립교향악단 정기연주회","d":"2026.04.17","p":"","s":"공연예정"},
-            {"t":"클라라 주미 강 & 김선욱 듀오 리사이틀","d":"2026.05.28","p":"","s":"공연예정"}
-        ],
-        "수성아트피아": [
-            {"t":"수성르네상스프로젝트, 젊은 예술가 리사이틀","d":"2026.04.29","p":"","s":"공연예정"}
-        ],
-        "대구문화예술회관": [
-            {"t":"백건우 피아노 리사이틀","d":"2026.05.07","p":"","s":"공연예정"}
-        ],
-        "기타": [
-            {"t":"선우예권 피아노 리사이틀","d":"2026.05.16","v":"달서아트센터","p":"","s":"공연예정"}
-        ]
-    },
-    "대전": {
-        "대전시립연정국악원": [
-            {"t":"제5회 트리오 스페스 정기연주회","d":"2026.03.31","p":"","s":"공연예정"},
-            {"t":"제50회 K-뮤직 필하모닉 오케스트라 정기연주회","d":"2026.05.31","p":"","s":"공연예정"}
-        ]
-    },
-    "광주": {
-        "광주 예술의 전당": [
-            {"t":"어린이날 기념 지브리 & 디즈니 OST 콘서트","d":"2026.05.05","p":"","s":"공연예정"},
-            {"t":"제405회 광주시립교향악단 정기연주회","d":"2026.04.10","p":"","s":"공연예정"}
-        ],
-        "국립아시아문화전당": [
-            {"t":"광주시립교향악단, GSO 체임버 시리즈 Ⅱ","d":"2026.04.23","p":"","s":"공연예정"}
-        ]
-    },
-    "울산": {
-        "울산문화예술회관": [
-            {"t":"케이팝 데몬 헌터스 OST 오케스트라 콘서트","d":"2026.05.02","p":"","s":"공연예정"},
-            {"t":"제250회 울산시립교향악단 정기연주회","d":"2026.05.29","p":"","s":"공연예정"}
-        ]
-    },
-    "강원": {
-        "강릉아트센터 (구. 강릉문화예술관)": [
-            {"t":"클라라 주미 강 & 김선욱 듀오 리사이틀","d":"2026.05.26","p":"","s":"공연예정"},
-            {"t":"지브리 & 디즈니 영화음악 FESTA","d":"2026.05.10","p":"","s":"공연예정"}
-        ],
-        "춘천문화예술회관": [
-            {"t":"대관령음악제, 강원의 사계 여름: 에스메 콰르텟","d":"2026.06.09","p":"","s":"공연예정"}
-        ]
-    },
-    "충남": {
-        "공주문예회관": [
-            {"t":"제209회 공주시충남교향악단 정기연주회","d":"2026.04.17","p":"","s":"공연예정"},
-            {"t":"지브리와 사랑에 빠지다: 지브리 영화음악 콘서트","d":"2026.05.10","p":"","s":"공연예정"}
-        ]
-    },
-    "경남": {
-        "통영국제음악당": [
-            {"t":"임윤찬 피아노 리사이틀","d":"2026.05.10","p":"","s":"공연예정"},
-            {"t":"백건우 피아노 리사이틀","d":"2026.05.05","p":"","s":"공연예정"}
-        ],
-        "성산아트홀": [
-            {"t":"조수미 세계무대 데뷔 40주년 기념 콘서트","d":"2026.05.09","p":"","s":"공연예정"}
-        ],
-        "기타": [
-            {"t":"백건우 피아노 리사이틀","d":"2026.04.03","v":"부산시민회관","p":"","s":"공연예정"}
-        ]
-    },
-    "경북": {
-        "구미시문화예술회관": [
-            {"t":"에든버러 페스티벌 우수작 초청 시리즈","d":"2026.06.20","p":"","s":"공연예정"}
-        ],
-        "포항문화예술회관": [
-            {"t":"제124회 포항시립합창단 정기연주회","d":"2026.04.09","p":"","s":"공연예정"},
-            {"t":"제222회 포항시립교향악단 정기연주회","d":"2026.04.02","p":"","s":"공연예정"}
-        ]
-    },
-    "전남": {
-        "GS칼텍스 예울마루": [
-            {"t":"김영욱 x 콜레기움 무지쿰 서울: 8 Seasons","d":"2026.05.07","p":"","s":"공연예정"},
-            {"t":"국립심포니오케스트라, 피터와 늑대","d":"2026.05.30","p":"","s":"공연예정"}
-        ],
-        "순천문화예술회관": [
-            {"t":"KBS교향악단과 함께하는 신년음악회","d":"2026.02.08","p":"","s":"공연완료"}
-        ]
-    },
-    "제주": {
-        "제주문예회관": [
-            {"t":"제182회 제주특별자치도립 제주교향악단 정기연주회","d":"2026.04.05","p":"","s":"공연예정"},
-            {"t":"제120회 제주특별자치도립 제주합창단 정기연주회","d":"2026.03.18","p":"","s":"공연완료"}
-        ]
-    }
-};
+document.addEventListener('DOMContentLoaded', async () => {
+    const API = window.ClassicHubAPI;
+    const PAGE_SIZE = 20;
 
-// ── 공연장 표시 이름 매핑 ──
-const VENUE_LABELS = {
-    '예술의전당 [서울]': '예술의전당',
-    '롯데콘서트홀': '롯데콘서트홀',
-    '세종문화회관': '세종문화회관',
-    '금호아트홀 연세': '금호아트홀',
-    '국립극장': '국립극장',
-    '성남아트센터': '성남아트센터',
-    '부천아트센터': '부천아트센터',
-    '고양아람누리': '고양아람누리',
-    '평택아트센터': '평택아트센터',
-    '아트센터 인천': '아트센터인천',
-    '인천문화예술회관': '인천문화예술회관',
-    '부산콘서트홀': '부산콘서트홀',
-    '부산문화회관': '부산문화회관',
-    '(재) 영화의전당': '영화의전당',
-    '대구콘서트하우스': '대구콘서트하우스',
-    '수성아트피아': '수성아트피아',
-    '대구문화예술회관': '대구문화예술회관',
-    '대전시립연정국악원': '대전시립연정국악원',
-    '광주 예술의 전당': '광주예술의전당',
-    '국립아시아문화전당': '국립아시아문화전당',
-    '울산문화예술회관': '울산문화예술회관',
-    '강릉아트센터 (구. 강릉문화예술관)': '강릉아트센터',
-    '춘천문화예술회관': '춘천문화예술회관',
-    '공주문예회관': '공주문예회관',
-    '아산시 평생학습관(아산아트홀)': '아산아트홀',
-    '통영국제음악당': '통영국제음악당',
-    '성산아트홀': '성산아트홀',
-    '3.15아트센터': '3.15아트센터',
-    '경상남도문화예술회관': '경남문화예술회관',
-    '김해문화의전당': '김해문화의전당',
-    '함안문화예술회관': '함안문화예술회관',
-    '거제문화예술회관': '거제문화예술회관',
-    '구미시문화예술회관': '구미문화예술회관',
-    '포항문화예술회관': '포항문화예술회관',
-    '포항시청 대잠홀': '포항대잠홀',
-    'GS칼텍스 예울마루': 'GS예울마루',
-    '목포시민문화체육센터': '목포문화체육센터',
-    '순천문화예술회관': '순천문화예술회관',
-    '제주문예회관': '제주문예회관',
-    '오디토리움 [제주]': '오디토리움',
-    '제주호은아트센터(구.섬아이뮤직아트센터)': '제주호은아트센터',
-    '기타': '기타',
-};
+    let venuesByRegion = {};
+    let regions = [];
+    let activeRegion = null;
+    let activeVenue = null;
+    let activeStatus = '공연예정';
+    let currentPage = 1;
 
-const REGIONS = Object.keys(DB);
+    const regionTabsEl = document.getElementById('region-tabs');
+    const venueChipsEl = document.getElementById('venue-chips');
+    const gridEl = document.getElementById('concert-grid');
+    const paginEl = document.getElementById('pagination');
+    const resultCountEl = document.getElementById('result-count');
+    const statusFiltersEl = document.getElementById('status-filters');
 
-let activeRegion = REGIONS[0];
-let activeVenue = null;
-let currentPage = 1;
-const PAGE_SIZE = 20;
+    const preferredRegionOrder = ['서울', '경기', '인천', '부산', '대구', '대전', '광주', '울산', '강원', '충북', '충남', '전북', '전남', '경북', '경남', '제주', '세종', '기타'];
 
-const regionTabsEl = document.getElementById('region-tabs');
-const venueChipsEl = document.getElementById('venue-chips');
-const gridEl = document.getElementById('concert-grid');
-const paginEl = document.getElementById('pagination');
-const resultCountEl = document.getElementById('result-count');
-
-function getVenueLabel(key) {
-    return VENUE_LABELS[key] || key;
-}
-
-function renderRegionTabs() {
-    regionTabsEl.innerHTML = '';
-    REGIONS.forEach(r => {
-        const btn = document.createElement('button');
-        btn.className = 'region-tab' + (r === activeRegion ? ' on' : '');
-        btn.textContent = r;
-        btn.addEventListener('click', () => {
-            activeRegion = r;
-            activeVenue = null;
-            currentPage = 1;
-            renderRegionTabs();
-            renderVenueChips();
-            renderGrid();
+    function sortRegions(input) {
+        return [...input].sort((a, b) => {
+            const ia = preferredRegionOrder.indexOf(a);
+            const ib = preferredRegionOrder.indexOf(b);
+            if (ia !== -1 || ib !== -1) return (ia === -1 ? 999 : ia) - (ib === -1 ? 999 : ib);
+            return a.localeCompare(b, 'ko');
         });
-        regionTabsEl.appendChild(btn);
-    });
-}
-
-function renderVenueChips() {
-    venueChipsEl.innerHTML = '';
-    const regionData = DB[activeRegion] || {};
-    const venueKeys = Object.keys(regionData);
-    
-    if (venueKeys.length === 0) return;
-    
-    // 자동으로 첫 번째 venue 선택
-    if (!activeVenue || !regionData[activeVenue]) {
-        activeVenue = venueKeys[0];
     }
-    
-    venueKeys.forEach((vk, i) => {
-        const count = regionData[vk].length;
-        const label = getVenueLabel(vk);
-        const chip = document.createElement('button');
-        chip.className = 'chip' + (vk === activeVenue ? ' active' : '');
-        chip.innerHTML = `<span class="chip-dot"></span>${label}<span class="chip-count">${count}</span>`;
-        chip.addEventListener('click', () => {
-            activeVenue = vk;
-            currentPage = 1;
-            renderVenueChips();
-            renderGrid();
+
+    function getVenueLabel(key) { return key || ''; }
+
+    async function loadVenuesByRegion() {
+        try {
+            const res = await API.getVenuesByRegion();
+            venuesByRegion = res.data || {};
+        } catch (e) {
+            console.error('지역별 공연장 목록 조회 실패:', e);
+            venuesByRegion = {};
+        }
+
+        regions = sortRegions(Object.keys(venuesByRegion).filter(r => Array.isArray(venuesByRegion[r]) && venuesByRegion[r].length));
+
+        const params = new URLSearchParams(location.search);
+        const paramR = params.get('region');
+        const paramV = params.get('venue');
+
+        activeRegion = paramR && regions.includes(paramR) ? paramR : regions[0];
+        if (paramV) {
+            const owningRegion = regions.find(r => venuesByRegion[r].includes(paramV));
+            if (owningRegion) {
+                activeRegion = owningRegion;
+                activeVenue = paramV;
+            }
+        }
+        if (!activeVenue) activeVenue = venuesByRegion[activeRegion]?.[0] || null;
+    }
+
+    function renderRegionTabs() {
+        if (!regionTabsEl) return;
+        regionTabsEl.innerHTML = '';
+        if (!regions.length) {
+            regionTabsEl.innerHTML = '<span style="color:rgba(255,255,255,.35);font-size:12px;">지역 목록을 불러오지 못했습니다.</span>';
+            return;
+        }
+        regions.forEach(region => {
+            const btn = document.createElement('button');
+            btn.className = 'region-tab' + (region === activeRegion ? ' on' : '');
+            btn.textContent = region;
+            btn.addEventListener('click', () => {
+                activeRegion = region;
+                activeVenue = venuesByRegion[activeRegion]?.[0] || null;
+                currentPage = 1;
+                renderRegionTabs();
+                renderVenueChips();
+                renderGrid();
+            });
+            regionTabsEl.appendChild(btn);
         });
-        venueChipsEl.appendChild(chip);
-    });
-}
+    }
 
-function getStatusClass(s) {
-    if (s === '공연예정') return 'upcoming';
-    if (s === '공연중') return 'ongoing';
-    return 'done';
-}
-function getStatusLabel(s) {
-    if (s === '공연예정') return '예정';
-    if (s === '공연중') return '진행중';
-    return '완료';
-}
+    function renderVenueChips() {
+        if (!venueChipsEl) return;
+        venueChipsEl.innerHTML = '';
+        const venues = venuesByRegion[activeRegion] || [];
+        if (!venues.length) {
+            venueChipsEl.innerHTML = '<span style="color:rgba(255,255,255,.35);font-size:12px;">선택한 지역의 공연장 목록이 없습니다.</span>';
+            return;
+        }
+        if (!activeVenue || !venues.includes(activeVenue)) activeVenue = venues[0];
+        venues.forEach(v => {
+            const chip = document.createElement('button');
+            chip.className = 'chip' + (v === activeVenue ? ' active' : '');
+            chip.innerHTML = `<span class="chip-dot"></span>${getVenueLabel(v)}`;
+            chip.addEventListener('click', () => {
+                activeVenue = v;
+                currentPage = 1;
+                renderVenueChips();
+                renderGrid();
+            });
+            venueChipsEl.appendChild(chip);
+        });
+    }
 
-    // ── 모달 열기/닫기 ──────────────────────────────────────
+    function getStatusClass(s) {
+        if (s === '공연예정') return 'upcoming';
+        if (s === '공연중') return 'ongoing';
+        return 'done';
+    }
+    function getStatusLabel(s) {
+        if (s === '공연예정') return '예정';
+        if (s === '공연중') return '진행중';
+        if (s === '공연완료') return '완료';
+        if (s === 'all') return '전체';
+        return s || '';
+    }
+    function renderStatusFilters() {
+        if (!statusFiltersEl) return;
+        const options = [
+            { key: '공연예정', label: '예정' },
+            { key: '공연중', label: '진행중' },
+            { key: '공연완료', label: '완료' },
+            { key: 'all', label: '전체' },
+        ];
+        statusFiltersEl.innerHTML = options.map(opt => `
+            <button type="button" data-status="${opt.key}" style="padding:.45rem .75rem;border-radius:999px;border:1px solid ${activeStatus===opt.key?'#e9c349':'rgba(255,255,255,.12)'};background:${activeStatus===opt.key?'#e9c349':'rgba(255,255,255,.03)'};color:${activeStatus===opt.key?'#131313':'rgba(255,255,255,.65)'};font-size:11px;cursor:pointer;">
+                ${opt.label}
+            </button>
+        `).join('');
+        statusFiltersEl.querySelectorAll('[data-status]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                activeStatus = btn.dataset.status;
+                currentPage = 1;
+                renderStatusFilters();
+                renderGrid();
+            });
+        });
+    }
+
+
     window.openModal = function openModal(p) {
         const overlay  = document.getElementById('concert-modal');
-        // 포스터
         const img = document.getElementById('modal-poster-img');
         const ph  = document.getElementById('modal-poster-ph');
         if (p.poster) {
@@ -554,132 +412,139 @@ function getStatusLabel(s) {
         } else {
             img.style.display = 'none'; ph.style.display = '';
         }
-        // 텍스트 채우기
         document.getElementById('modal-genre').textContent  = p.genre || '';
         document.getElementById('modal-title').textContent  = p.title || '';
         document.getElementById('modal-date').textContent   =
-            p.startDate === p.endDate ? p.startDate : p.startDate + ' ~ ' + p.endDate;
+            p.startDate === p.endDate ? p.startDate : `${p.startDate} ~ ${p.endDate}`;
         document.getElementById('modal-venue').textContent  = p.venue || '';
-        // 상태 뱃지
         const sEl = document.getElementById('modal-status');
         sEl.textContent = p.status || '';
         sEl.className   = 'modal-s ' + getStatusClass(p.status);
-        // 런타임
         const rtRow = document.getElementById('modal-runtime-row');
         const rtEl  = document.getElementById('modal-runtime');
         if (p.runtime) { rtEl.textContent = p.runtime; rtRow.style.display = 'flex'; }
         else { rtRow.style.display = 'none'; }
-        // 출연진
         const castRow = document.getElementById('modal-cast-row');
         const castEl  = document.getElementById('modal-cast');
         if (p.cast) { castEl.textContent = p.cast; castRow.style.display = 'flex'; }
         else { castRow.style.display = 'none'; }
-        // KOPIS 링크
         const kbtn = document.getElementById('modal-kopis-btn');
-        kbtn.href = p.kopisUrl || ('https://www.kopis.or.kr/por/db/pblprfr/pblprfrView.do?menuId=MNU_00010&pblprfrId=' + (p.id || ''));
-        // 열기
+        const ticketUrl = p.reservationUrl || p.kopisUrl || '';
+        if (ticketUrl) {
+            kbtn.href = ticketUrl;
+            kbtn.style.pointerEvents = '';
+            kbtn.style.opacity = '';
+            kbtn.textContent = '예매하기';
+        } else {
+            kbtn.removeAttribute('href');
+            kbtn.style.pointerEvents = 'none';
+            kbtn.style.opacity = '.45';
+            kbtn.textContent = '예매 정보 없음';
+        }
         overlay.classList.add('open');
         document.body.style.overflow = 'hidden';
-    }
+    };
 
     window.closeModal = function() {
         document.getElementById('concert-modal').classList.remove('open');
         document.body.style.overflow = '';
     };
-
     document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 
-
     function renderPagination(total, page) {
-    if (!paginEl) return;
-    const pages = Math.ceil(total / PAGE_SIZE);
-    if (pages <= 1) { paginEl.innerHTML = ''; return; }
-    const btn = (i, active) =>
-        `<button onclick="goPage(${i})" style="padding:.4rem .75rem;background:${active?'#e9c349':'none'};border:1px solid ${active?'#e9c349':'rgba(255,255,255,.12)'};color:${active?'#131313':'rgba(255,255,255,.45)'};border-radius:4px;cursor:pointer;font-size:12px;min-width:32px;">${i}</button>`;
-    let html = `<button onclick="goPage(${page-1})" ${page<=1?'disabled':''} style="padding:.4rem .7rem;background:none;border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.45);border-radius:4px;cursor:pointer;font-size:12px;">‹</button>`;
-    for (let i = 1; i <= pages; i++) {
-        if (i===1||i===pages||(i>=page-2&&i<=page+2)) html += btn(i, i===page);
-        else if (i===page-3||i===page+3) html += `<span style="color:rgba(255,255,255,.25);padding:.4rem .2rem;">…</span>`;
-    }
-    html += `<button onclick="goPage(${page+1})" ${page>=pages?'disabled':''} style="padding:.4rem .7rem;background:none;border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.45);border-radius:4px;cursor:pointer;font-size:12px;">›</button>`;
-    paginEl.innerHTML = html;
-}
-
-window.goPage = function(p) {
-    currentPage = p;
-    renderGrid();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-};
-
-function renderGrid() {
-    const regionData = DB[activeRegion] || {};
-    const allItems = regionData[activeVenue] || [];
-
-    // 결과 헤더
-    const label = getVenueLabel(activeVenue);
-    resultCountEl.textContent = allItems.length + '개 공연';
-
-    if (!allItems.length) {
-        gridEl.innerHTML = '<div class="empty">해당 공연장의 공연 정보가 없습니다.</div>';
-        if (paginEl) paginEl.innerHTML = '';
-        return;
+        if (!paginEl) return;
+        const pages = Math.ceil(total / PAGE_SIZE);
+        if (pages <= 1) { paginEl.innerHTML = ''; return; }
+        const btn = (i, active) =>
+            `<button onclick="goPage(${i})" style="padding:.4rem .75rem;background:${active?'#e9c349':'none'};border:1px solid ${active?'#e9c349':'rgba(255,255,255,.12)'};color:${active?'#131313':'rgba(255,255,255,.45)'};border-radius:4px;cursor:pointer;font-size:12px;min-width:32px;">${i}</button>`;
+        let html = `<button onclick="goPage(${page-1})" ${page<=1?'disabled':''} style="padding:.4rem .7rem;background:none;border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.45);border-radius:4px;cursor:pointer;font-size:12px;">‹</button>`;
+        for (let i = 1; i <= pages; i++) {
+            if (i===1||i===pages||(i>=page-2&&i<=page+2)) html += btn(i, i===page);
+            else if (i===page-3||i===page+3) html += `<span style="color:rgba(255,255,255,.25);padding:.4rem .2rem;">…</span>`;
+        }
+        html += `<button onclick="goPage(${page+1})" ${page>=pages?'disabled':''} style="padding:.4rem .7rem;background:none;border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.45);border-radius:4px;cursor:pointer;font-size:12px;">›</button>`;
+        paginEl.innerHTML = html;
     }
 
-    // 페이지네이션 슬라이싱
-    const start = (currentPage - 1) * PAGE_SIZE;
-    const items = allItems.slice(start, start + PAGE_SIZE);
+    window.goPage = function(p) {
+        currentPage = Math.max(1, p);
+        renderGrid();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
 
-    gridEl.innerHTML = items.map((p, i) => {
-        const sc = getStatusClass(p.s);
-        const sl = getStatusLabel(p.s);
-        const venue = p.v || activeVenue;
-        const venueLabel = getVenueLabel(venue);
-        return `
-        <article class="c-card fade-up" style="animation-delay:${Math.min(i,11)*0.03}s" data-idx="${i}">
-            <div class="c-poster">
-                <img src="${p.p}" alt="${p.t}" loading="lazy" onerror="this.style.display='none'">
-                <span class="c-poster-ph">CLASSIC</span>
-                <div class="c-poster-grad"></div>
-            </div>
-            <div class="c-info">
-                <p class="c-venue-label">${venueLabel}</p>
-                <p class="c-title">${p.t}</p>
-                <p class="c-date">${p.d}<span class="c-status ${sc}">${sl}</span></p>
-            </div>
-        </article>`;
-    }).join('');
+    async function openModalFromSummary(summary) {
+        openModal({ ...summary, title: '불러오는 중...' });
+        try {
+            openModal(await API.getPerformanceDetail(summary.id));
+        } catch (e) {
+            console.error('공연 상세 조회 실패:', e);
+            openModal(summary);
+        }
+    }
 
-    renderPagination(allItems.length, currentPage);
-    // 카드 클릭 → 모달
-    gridEl.querySelectorAll('.c-card').forEach((card, i) => {
-        card.addEventListener('click', () => {
-            const p = items[+card.dataset.idx];
-            if (!p) return;
-            openModal({
-                id:        '',
-                title:     p.t,
-                startDate: p.d,
-                endDate:   p.d,
-                venue:     p.v || activeVenue,
-                genre:     p.g || '',
-                poster:    p.p || '',
-                status:    p.s,
-                runtime:   p.r || '',
-                cast:      p.c || '',
+    async function renderGrid() {
+        if (!activeVenue) {
+            resultCountEl.textContent = '0개 공연';
+            gridEl.innerHTML = '<div class="empty">공연장을 선택할 수 없습니다.</div>';
+            if (paginEl) paginEl.innerHTML = '';
+            return;
+        }
+
+        resultCountEl.textContent = '조회 중...';
+        gridEl.innerHTML = '<div class="empty">공연 정보를 불러오는 중입니다.</div>';
+        try {
+            const res = await API.getPerformances({
+                venue: activeVenue,
+                page: currentPage,
+                per_page: PAGE_SIZE,
+                status: activeStatus,
+                sort: 'date_asc',
             });
-        });
-    });
-}
+            const items = (res.data || []).map(p => API.normalizePerformanceSummary(p, '공연예정'));
+            resultCountEl.textContent = `${activeRegion || ''} · ${activeVenue} · ${getStatusLabel(activeStatus) || '전체'} · ${res.total || 0}개 공연`;
 
-// 초기화
-const paramR = new URLSearchParams(location.search).get('region');
-const paramV = new URLSearchParams(location.search).get('venue');
-if (paramR && REGIONS.includes(paramR)) activeRegion = paramR;
+            if (!items.length) {
+                gridEl.innerHTML = '<div class="empty">해당 조건의 공연 정보가 없습니다.</div>';
+                if (paginEl) paginEl.innerHTML = '';
+                return;
+            }
 
-renderRegionTabs();
-renderVenueChips();
-if (paramV && DB[activeRegion]?.[paramV]) activeVenue = paramV;
-renderGrid();
+            gridEl.innerHTML = items.map((p, i) => {
+                const sc = getStatusClass(p.status);
+                const sl = getStatusLabel(p.status);
+                return `
+                <article class="c-card fade-up" style="animation-delay:${Math.min(i,11)*0.03}s" data-idx="${i}">
+                    <div class="c-poster">
+                        ${p.poster ? `<img src="${p.poster}" alt="${p.title}" loading="lazy" onerror="this.style.display='none'">` : ''}
+                        <span class="c-poster-ph">CLASSIC</span>
+                        <div class="c-poster-grad"></div>
+                    </div>
+                    <div class="c-info">
+                        <p class="c-venue-label">${getVenueLabel(p.venue || activeVenue)}</p>
+                        <p class="c-title">${p.title}</p>
+                        <p class="c-date">${p.startDate}<span class="c-status ${sc}">${sl}</span></p>
+                    </div>
+                </article>`;
+            }).join('');
+
+            renderPagination(res.total || 0, currentPage);
+            gridEl.querySelectorAll('.c-card').forEach(card => {
+                card.addEventListener('click', () => openModalFromSummary(items[+card.dataset.idx]));
+            });
+        } catch (e) {
+            console.error('장소별 공연 조회 실패:', e);
+            resultCountEl.textContent = '조회 실패';
+            gridEl.innerHTML = '<div class="empty">백엔드 데이터를 불러오지 못했습니다. 서버가 실행 중인지 확인하세요.</div>';
+            if (paginEl) paginEl.innerHTML = '';
+        }
+    }
+
+    await loadVenuesByRegion();
+    renderRegionTabs();
+    renderVenueChips();
+    renderStatusFilters();
+    renderGrid();
+});
 </script>
 
 <!-- ── 상세 모달 ── -->

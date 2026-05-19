@@ -541,9 +541,20 @@ window.openModal = function openModal(p) {
     const castEl  = document.getElementById('modal-cast');
     if (p.cast) { castEl.textContent = p.cast; castRow.style.display = 'flex'; }
     else { castRow.style.display = 'none'; }
-    // KOPIS 링크
+    // 예매 링크
     const kbtn = document.getElementById('modal-kopis-btn');
-    kbtn.href = p.kopisUrl || ('https://www.kopis.or.kr/por/db/pblprfr/pblprfrView.do?menuId=MNU_00010&pblprfrId=' + (p.id || ''));
+    const ticketUrl = p.reservationUrl || p.kopisUrl || '';
+    if (ticketUrl) {
+        kbtn.href = ticketUrl;
+        kbtn.style.pointerEvents = '';
+        kbtn.style.opacity = '';
+        kbtn.textContent = '예매하기';
+    } else {
+        kbtn.removeAttribute('href');
+        kbtn.style.pointerEvents = 'none';
+        kbtn.style.opacity = '.45';
+        kbtn.textContent = '예매 정보 없음';
+    }
     // 열기
     overlay.classList.add('open');
     document.body.style.overflow = 'hidden';
@@ -572,96 +583,21 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal()
 
 <script src="main.js"></script>
 <script>
-/* =====================================================================
-   ClassicHub — 기간별 조회 페이지 (공연찾기_기간별.html)
-   =====================================================================
-   [백엔드 연동 포인트]
-   사용자가 달력에서 기간을 선택하고 "조회하기" 버튼을 누르면
-   fetchConcertsByDate() 함수가 호출됩니다.
-   현재는 더미 데이터를 반환하며, 백엔드 연동 시 fetch 블록을 활성화하세요.
-
-   API 엔드포인트: GET /api/concerts
-   Query Parameters:
-     - start : string  (시작일, YYYY-MM-DD 형식, 예: "2026-04-12")
-     - end   : string  (종료일, YYYY-MM-DD 형식, 예: "2026-05-30")
-     - page  : number  (1-based)
-     - size  : number  (기본값 20)
-
-   기대 응답 JSON:
-   {
-     "total": 30,
-     "page": 1,
-     "size": 20,
-     "items": [
-       {
-         "id":        "PF_PF123456",
-         "title":     "베토벤 교향곡 9번",
-         "startDate": "2026-04-12",
-         "endDate":   "2026-04-12",
-         "venue":     "예술의전당",
-         "genre":     "교향곡",
-         "poster":    "http://...",
-         "status":    "공연예정"
-       }, ...
-     ]
-   }
-===================================================================== */
-
 document.addEventListener('DOMContentLoaded', () => {
+    const API = window.ClassicHubAPI;
+    const PAGE_SIZE = 20;
 
-    /* ── [백엔드 연동] fetchConcertsByDate ────────────────────────
-       연동 시 DUMMY_DATA 블록을 제거하고 fetch 블록을 활성화하세요.
-    ────────────────────────────────────────────────────────────── */
-    async function fetchConcertsByDate({ start, end, page, size }) {
-
-        // ── [백엔드 연동] fetch 블록 ──
-        /*
-        const params = new URLSearchParams({ start, end, page, size });
-        const res = await fetch(`/api/concerts?${params.toString()}`);
-        return await res.json(); // { total, page, size, items }
-        */
-
-        // ── [더미 데이터] 백엔드 연동 전 임시 ──
-        const DUMMY = [
-            {id:1,  title:'라흐마니노프 피아노 협주곡 2번', startDate:'2026-04-12', endDate:'2026-04-12', venue:'롯데콘서트홀',         genre:'협주곡', poster:'', status:'공연예정', runtime:'1시간 20분', cast:'손열음, 얀 베일루 등'},
-            {id:2,  title:'말러 교향곡 5번',               startDate:'2026-04-20', endDate:'2026-04-20', venue:'롯데콘서트홀',         genre:'교향곡', poster:'', status:'공연예정', runtime:'1시간 30분', cast:'야닉 네제세갱, 서울시향 등'},
-            {id:3,  title:'베토벤 교향곡 9번',             startDate:'2026-04-28', endDate:'2026-04-28', venue:'예술의전당',           genre:'교향곡', poster:'', status:'공연예정', runtime:'2시간 30분', cast:'정명훈, 황수미, 김선 등'},
-            {id:4,  title:'쇼팽 녹턴 전곡',               startDate:'2026-05-03', endDate:'2026-05-03', venue:'예술의전당',           genre:'피아노', poster:'', status:'공연예정', runtime:'1시간 40분', cast:'조성진'},
-            {id:5,  title:'비발디 사계',                   startDate:'2026-05-10', endDate:'2026-05-10', venue:'세종문화회관',         genre:'협주곡', poster:'', status:'공연예정', runtime:'1시간 10분', cast:'레이 첸, 코리안챔버오케스트라 등'},
-            {id:6,  title:'슈베르트 가곡의 밤',            startDate:'2026-05-18', endDate:'2026-05-18', venue:'금호아트홀',           genre:'가곡',   poster:'', status:'공연예정', runtime:'1시간 30분', cast:'김가영, 정호영 등'},
-            {id:7,  title:'서울시향 정기연주회',           startDate:'2026-05-22', endDate:'2026-05-22', venue:'세종문화회관',         genre:'교향곡', poster:'', status:'공연예정', runtime:'2시간', cast:'오스모 벤스케, 서울시향 등'},
-            {id:8,  title:'모차르트 마술피리',             startDate:'2026-06-05', endDate:'2026-06-05', venue:'예술의전당 오페라극장', genre:'오페라', poster:'', status:'공연예정', runtime:'3시간', cast:'김우경, 박소영, 이동환 등'},
-            {id:9,  title:'브람스 바이올린 협주곡',        startDate:'2026-06-12', endDate:'2026-06-12', venue:'세종문화회관',         genre:'협주곡', poster:'', status:'공연예정', runtime:'1시간 20분', cast:'힐러리 한, KBS교향악단 등'},
-            {id:10, title:'드뷔시 피아노 독주회',          startDate:'2026-06-18', endDate:'2026-06-18', venue:'LG아트센터',           genre:'피아노', poster:'', status:'공연예정', runtime:'1시간 30분', cast:'임윤찬'},
-            {id:11, title:'하이든 현악 합주',              startDate:'2026-06-25', endDate:'2026-06-25', venue:'IBK챔버홀',            genre:'기타',   poster:'', status:'공연예정', runtime:'1시간', cast:'노부스 콰르텟 등'},
-            {id:12, title:'KBS교향악단 정기연주회',        startDate:'2026-07-04', endDate:'2026-07-04', venue:'KBS홀',               genre:'교향곡', poster:'', status:'공연예정', runtime:'2시간', cast:'피에타리 인킨넨, KBS교향악단 등'},
-        ];
-        const filtered = DUMMY.filter(p => p.startDate <= end && p.endDate >= start);
-        const startIdx = (page - 1) * size;
-        return {
-            total: filtered.length,
-            page,
-            size,
-            items: filtered.slice(startIdx, startIdx + size),
-        };
-    }
-
-    // 공연 있는 날짜 (달력 점 표시용 — 백엔드 연동 시 별도 API로 받거나 프론트에서 제거 가능)
-    const concertDates = new Set([
-        '2026-04-12','2026-04-20','2026-04-28','2026-05-03','2026-05-10',
-        '2026-05-18','2026-05-22','2026-06-05','2026-06-12','2026-06-18',
-        '2026-06-25','2026-07-04',
-    ]);
-
-    // ── 달력 상태 ──
+    let concertDates = new Set();
     const today = new Date();
-    today.setHours(0,0,0,0);
+    today.setHours(0, 0, 0, 0);
     let viewYear  = today.getFullYear();
     let viewMonth = today.getMonth();
     let startDate = null;
     let endDate   = null;
+    let resultStart = null;
+    let resultEnd = null;
+    let currentPage = 1;
 
-    // ── DOM refs ──
     const calGrid       = document.getElementById('cal-grid');
     const calLabel      = document.getElementById('cal-month-label');
     const selectionInfo = document.getElementById('cal-selection-info');
@@ -672,6 +608,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const resultBadge   = document.getElementById('result-range-badge');
     const resultCount   = document.getElementById('result-count');
     const resetBtn      = document.getElementById('reset-btn');
+    const paginEl       = document.getElementById('pagination');
 
     const toStr = (d) => {
         if (!d) return '';
@@ -681,6 +618,44 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!d) return '';
         return `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
     };
+    const parseLocalDate = (s) => {
+        if (!s) return null;
+        const [y, m, d] = String(s).split('-').map(Number);
+        if (!y || !m || !d) return null;
+        return new Date(y, m - 1, d);
+    };
+
+    function statusClass(s){ return s==='공연예정'?'upcoming':s==='공연중'?'ongoing':'done'; }
+    function statusLabel(s){ return s==='공연예정'?'예정':s==='공연중'?'진행중':s==='공연완료'?'완료':(s || ''); }
+
+    async function fetchConcertsByDate({ start, end, page, size }) {
+        const res = await API.getPerformances({
+            date_from: start,
+            date_to: end,
+            page,
+            per_page: size,
+            status: 'all',
+            sort: 'date_asc',
+        });
+        return {
+            total: res.total || 0,
+            page,
+            size,
+            items: (res.data || []).map(p => API.normalizePerformanceSummary(p, '공연예정')),
+        };
+    }
+
+    async function loadConcertDatesForMonth() {
+        const first = new Date(viewYear, viewMonth, 1);
+        const last = new Date(viewYear, viewMonth + 1, 0);
+        try {
+            const data = await fetchConcertsByDate({ start: toStr(first), end: toStr(last), page: 1, size: 100 });
+            concertDates = new Set(data.items.map(p => p.rawStartDate).filter(Boolean));
+        } catch (e) {
+            console.error('월별 공연 날짜 조회 실패:', e);
+            concertDates = new Set();
+        }
+    }
 
     const renderCalendar = () => {
         calLabel.textContent = `${viewYear}년 ${viewMonth+1}월`;
@@ -712,9 +687,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const onDayClick = (date) => {
         if (!startDate || (startDate && endDate)) {
             startDate = date; endDate = null;
+        } else if (date < startDate) {
+            endDate = startDate; startDate = date;
         } else {
-            if (date < startDate) { endDate = startDate; startDate = date; }
-            else { endDate = date; }
+            endDate = date;
         }
         renderCalendar();
         updateInfo();
@@ -733,149 +709,117 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    document.getElementById('prev-month').addEventListener('click', () => {
-        viewMonth--; if (viewMonth < 0) { viewMonth = 11; viewYear--; }
+    async function changeMonth(delta) {
+        viewMonth += delta;
+        if (viewMonth < 0) { viewMonth = 11; viewYear--; }
+        if (viewMonth > 11) { viewMonth = 0; viewYear++; }
+        await loadConcertDatesForMonth();
         renderCalendar();
-    });
-    document.getElementById('next-month').addEventListener('click', () => {
-        viewMonth++; if (viewMonth > 11) { viewMonth = 0; viewYear++; }
-        renderCalendar();
-    });
+    }
 
+    document.getElementById('prev-month').addEventListener('click', () => changeMonth(-1));
+    document.getElementById('next-month').addEventListener('click', () => changeMonth(1));
 
+    function renderPagination(total) {
+        if (!paginEl) return;
+        const pages = Math.ceil(total / PAGE_SIZE);
+        if (pages <= 1) { paginEl.innerHTML = ''; return; }
+        const visible = Array.from({ length: pages }, (_, i) => i + 1)
+            .filter(i => i === 1 || i === pages || Math.abs(i - currentPage) <= 2);
+        paginEl.innerHTML = `
+            <button data-page="${currentPage - 1}" ${currentPage <= 1 ? 'disabled' : ''} style="padding:.4rem .7rem;background:none;border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.45);border-radius:4px;cursor:pointer;font-size:12px;">‹</button>
+            ${visible.map((i, idx) => `${idx && i - visible[idx-1] > 1 ? '<span style="color:rgba(255,255,255,.25);padding:.4rem .2rem;">…</span>' : ''}<button data-page="${i}" style="padding:.4rem .75rem;background:${i===currentPage?'#e9c349':'none'};border:1px solid ${i===currentPage?'#e9c349':'rgba(255,255,255,.12)'};color:${i===currentPage?'#131313':'rgba(255,255,255,.45)'};border-radius:4px;cursor:pointer;font-size:12px;min-width:32px;">${i}</button>`).join('')}
+            <button data-page="${currentPage + 1}" ${currentPage >= pages ? 'disabled' : ''} style="padding:.4rem .7rem;background:none;border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.45);border-radius:4px;cursor:pointer;font-size:12px;">›</button>
+        `;
+        paginEl.querySelectorAll('[data-page]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const next = Number(btn.dataset.page);
+                if (next >= 1 && next <= pages && next !== currentPage) loadResultPage(next);
+            });
+        });
+    }
+
+    async function openModalFromSummary(summary) {
+        openModal({ ...summary, title: '불러오는 중...' });
+        try {
+            openModal(await API.getPerformanceDetail(summary.id));
+        } catch (e) {
+            console.error('공연 상세 조회 실패:', e);
+            openModal(summary);
+        }
+    }
+
+    function renderCards(items) {
+        resultGrid.innerHTML = items.map((p, i) => `
+            <article class="c-card" data-idx="${i}">
+                <div class="c-poster">
+                    ${p.poster ? `<img src="${API.escapeHTML(p.poster)}" alt="${API.escapeHTML(p.title)}" loading="lazy" onerror="this.style.display='none'">` : ''}
+                    <span class="c-poster-label">CLASSIC</span>
+                    <div class="c-poster-grad"></div>
+                </div>
+                <div class="c-info">
+                    <p class="c-label">${API.escapeHTML(p.genre || '')}</p>
+                    <p class="c-title">${API.escapeHTML(p.title)}</p>
+                    <p class="c-date">${API.escapeHTML(p.startDate)} · ${API.escapeHTML(p.venue || '')}
+                        <span class="c-status ${statusClass(p.status)}">${statusLabel(p.status)}</span>
+                    </p>
+                </div>
+            </article>
+        `).join('');
+        resultGrid.querySelectorAll('.c-card').forEach(card => {
+            card.addEventListener('click', () => openModalFromSummary(items[+card.dataset.idx]));
+        });
+    }
+
+    async function loadResultPage(page) {
+        currentPage = page;
+        resultCount.textContent = '조회 중...';
+        resultGrid.innerHTML = '<div class="empty" style="color:rgba(255,255,255,.25);">불러오는 중...</div>';
+        try {
+            const data = await fetchConcertsByDate({ start: resultStart, end: resultEnd, page: currentPage, size: PAGE_SIZE });
+            resultCount.textContent = `${data.total}개 공연`;
+            if (!data.items.length) {
+                resultGrid.innerHTML = '<div class="empty">선택한 기간에 공연이 없습니다.</div>';
+                if (paginEl) paginEl.innerHTML = '';
+                return;
+            }
+            renderCards(data.items);
+            renderPagination(data.total);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        } catch (e) {
+            console.error('기간별 공연 조회 실패:', e);
+            resultCount.textContent = '조회 실패';
+            resultGrid.innerHTML = '<div class="empty">백엔드 데이터를 불러오지 못했습니다. 서버가 실행 중인지 확인하세요.</div>';
+            if (paginEl) paginEl.innerHTML = '';
+        }
+    }
 
     searchBtn.addEventListener('click', async () => {
         const sd = startDate;
         const ed = endDate || startDate;
-
-        // 배지
-        resultBadge.textContent = toStr(sd) === toStr(ed)
-            ? toDisplay(sd)
-            : `${toDisplay(sd)}  ~  ${toDisplay(ed)}`;
-        resultCount.textContent  = '조회 중...';
-        resultGrid.innerHTML     = '<div class="empty" style="color:rgba(255,255,255,.25);">불러오는 중...</div>';
+        resultStart = toStr(sd);
+        resultEnd = toStr(ed);
+        currentPage = 1;
+        resultBadge.textContent = resultStart === resultEnd ? toDisplay(sd) : `${toDisplay(sd)}  ~  ${toDisplay(ed)}`;
         calSection.style.display = 'none';
         resultSection.style.display = 'block';
-
-        try {
-            const data = await fetchConcertsByDate({ start: toStr(sd), end: toStr(ed), page: 1, size: 20 });
-            resultCount.textContent = `${data.total}개 공연`;
-
-            if (!data.items.length) {
-                resultGrid.innerHTML = '<div class="empty">선택한 기간에 공연이 없습니다.</div>';
-            } else {
-                function statusClass(s){return s==='공연예정'?'upcoming':s==='공연중'?'ongoing':'done';}
-            function statusLabel(s){return s==='공연예정'?'예정':s==='공연중'?'진행중':'완료';}
-            resultGrid.innerHTML = data.items.map((p, i) => `
-                <article class="c-card" data-idx="${i}">
-                    <div class="c-poster">
-                        ${p.poster ? `<img src="${p.poster}" alt="${p.title}" loading="lazy" onerror="this.style.display='none'">` : ''}
-                        <span class="c-poster-label">CLASSIC</span>
-                        <div class="c-poster-grad"></div>
-                    </div>
-                    <div class="c-info">
-                        <p class="c-label">${p.genre}</p>
-                        <p class="c-title">${p.title}</p>
-                        <p class="c-date">${p.startDate.replace(/-/g,'.')} · ${p.venue}
-                            <span class="c-status ${statusClass(p.status)}">${statusLabel(p.status)}</span>
-                        </p>
-                    </div>
-                </article>
-            `).join('');
-            // 카드 클릭 → 모달
-            resultGrid.querySelectorAll('.c-card').forEach(card => {
-                card.addEventListener('click', () => {
-                    const p = data.items[+card.dataset.idx];
-                    if (!p) return;
-                    openModal({
-                        id:        p.id || '',
-                        title:     p.title,
-                        startDate: p.startDate.replace(/-/g,'.'),
-                        endDate:   p.endDate.replace(/-/g,'.'),
-                        venue:     p.venue,
-                        genre:     p.genre || '',
-                        poster:    p.poster || '',
-                        status:    p.status,
-                        runtime:   p.runtime || '',
-                        cast:      p.cast || '',
-                    });
-                });
-            });
-            // 페이지네이션 (기간별은 결과 수가 적으므로 20개 초과 시만)
-            const paginEl = document.getElementById('pagination');
-            if (paginEl) {
-                const pages = Math.ceil(data.total / 20);
-                paginEl.innerHTML = pages > 1 ? Array.from({length:pages},(_,i)=>`<button onclick="window.scrollTo(0,0)" style="padding:.4rem .75rem;background:${i===0?'#e9c349':'none'};border:1px solid ${i===0?'#e9c349':'rgba(255,255,255,.12)'};color:${i===0?'#131313':'rgba(255,255,255,.45)'};border-radius:4px;cursor:pointer;font-size:12px;">${i+1}</button>`).join('') : '';
-            }
-            }
-        } catch (e) {
-            console.error('기간별 공연 조회 실패:', e);
-            resultGrid.innerHTML = '<div class="empty">데이터를 불러오지 못했습니다.</div>';
-        }
+        await loadResultPage(1);
     });
 
     resetBtn.addEventListener('click', () => {
-        startDate = null; endDate = null;
+        startDate = null; endDate = null; resultStart = null; resultEnd = null; currentPage = 1;
         renderCalendar(); updateInfo();
+        if (paginEl) paginEl.innerHTML = '';
         resultSection.style.display = 'none';
-        calSection.style.display    = 'flex';
+        calSection.style.display = 'flex';
     });
 
-    renderCalendar();
-    updateInfo();
+    (async function init() {
+        await loadConcertDatesForMonth();
+        renderCalendar();
+        updateInfo();
+    })();
 });
 </script>
-
-<!-- ── 상세 모달 ── -->
-<div class="modal-overlay" id="concert-modal" onclick="if(event.target===this)closeModal()">
-  <div class="modal-box">
-    <div class="modal-poster" id="modal-poster">
-      <div class="modal-poster-bg"></div>
-      <img id="modal-poster-img" src="" alt="" style="display:none;">
-      <span class="modal-poster-ph" id="modal-poster-ph">CLASSIC</span>
-      <div class="modal-poster-fade"></div>
-      <div class="modal-poster-top"></div>
-    </div>
-    <div class="modal-body">
-      <button class="modal-xbtn" onclick="closeModal()">×</button>
-      <div>
-        <p class="modal-eyebrow" id="modal-genre"></p>
-        <div class="modal-title-row">
-          <span class="modal-title" id="modal-title"></span>
-        </div>
-        <div class="modal-rule"></div>
-        <div class="modal-meta">
-          <div class="modal-mrow">
-            <span class="modal-mk">상태</span>
-            <span class="modal-mv"><span class="modal-s" id="modal-status"></span></span>
-          </div>
-          <div class="modal-mrow">
-            <span class="modal-mk">기간</span>
-            <span class="modal-mv" id="modal-date"></span>
-          </div>
-          <div class="modal-mrow">
-            <span class="modal-mk">장소</span>
-            <span class="modal-mv" id="modal-venue"></span>
-          </div>
-          <div class="modal-mrow" id="modal-runtime-row">
-            <span class="modal-mk">런타임</span>
-            <span class="modal-mv" id="modal-runtime"></span>
-          </div>
-          <div class="modal-mrow" id="modal-cast-row">
-            <span class="modal-mk">출연진</span>
-            <span class="modal-mv cast" id="modal-cast"></span>
-          </div>
-        </div>
-      </div>
-      <div class="modal-foot">
-        <a class="modal-kbtn" id="modal-kopis-btn" href="#" target="_blank" rel="noopener">
-          예매하기
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M7 7h10v10"/></svg>
-        </a>
-      </div>
-    </div>
-  </div>
-</div>
-
 </body>
 </html>
