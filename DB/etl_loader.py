@@ -327,6 +327,8 @@ def run_etl_process():
             raw_artists = get_val("artists")
             if raw_artists:
                 artist_list = [n.strip() for n in str(raw_artists).split(',') if n.strip()]
+                seen_artists = set() # [추가] 단일 공연 내 아티스트 중복 매핑 방지용 세트
+                
                 for a_name in artist_list:
                     clean_name, role = clean_artist_name(a_name)
                     if not clean_name: continue
@@ -338,6 +340,11 @@ def run_etl_process():
                         cursor.execute("SELECT id FROM Artist WHERE name = ?", (clean_name,))
                         a_id = cursor.fetchone()[0]
                         artist_cache[clean_name] = a_id
+                    
+                    # [추가] 이미 현재 공연에 맵핑된 아티스트 ID라면 건너뛰기
+                    if a_id in seen_artists:
+                        continue
+                    seen_artists.add(a_id)
                         
                     cursor.execute("INSERT INTO Performance_Artist (performance_id, artist_id, role) VALUES (?, ?, ?)", (perf_id, a_id, role))
                     counts["artist"] += 1
@@ -347,7 +354,7 @@ def run_etl_process():
 
         conn.commit()
         print(f"✅ 적재 성공: 공연 {counts['perf']}건, 아티스트 연결 {counts['artist']}건 (날짜 누락 스킵: {counts['skipped']}건)")
-        
+
     except Exception as e:
         conn.rollback() # DB 롤백
         
