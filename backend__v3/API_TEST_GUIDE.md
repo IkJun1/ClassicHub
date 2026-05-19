@@ -2,20 +2,28 @@
 
 백엔드 서버와 데이터베이스가 정상적으로 연결되어 데이터를 주고받는지 시각적으로 확인하는 방법입니다.
 
-## 1. 백엔드 서버 실행
-먼저 터미널에서 백엔드 서버를 실행해야 합니다.
+## 1. 필수 요구 사항
+- **Python 3.10** 이상 버전이 설치되어 있어야 합니다.
+- 터미널(또는 CMD)을 열고 `backend__v3` 폴더로 이동한 후, 아래 명령어를 입력하여 필요한 라이브러리를 설치합니다.
 
 ```bash
-# backend__v2 폴더로 이동 후 실행
+pip install -r requirements.txt
+```
+
+## 2. 백엔드 서버 실행
+터미널에서 백엔드 서버를 실행 합니다.
+
+```bash
+# backend__v3 폴더로 이동 후 실행
 uvicorn main:app --reload --port 8000
 ```
 
-## 2. Swagger UI 접속
+## 3. Swagger UI 접속
 서버가 실행 중인 상태에서 브라우저를 열고 다음 주소에 접속합니다.
 
 - **URL:** [http://localhost:8000/docs](http://localhost:8000/docs)
 
-## 3. API 테스트 (데이터 확인)
+## 4. API 테스트 (데이터 확인)
 화면에 나타나는 Swagger UI를 통해 실제 DB 데이터를 조회해 볼 수 있습니다.
 
 1. **API 선택**: 목록 조회가 가능한 API(예: `GET /api/performances`)를 클릭합니다.
