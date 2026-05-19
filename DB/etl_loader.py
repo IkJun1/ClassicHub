@@ -194,9 +194,9 @@ def run_etl_process():
         for pattern in noise_patterns:
             clean_text = re.sub(pattern, '', clean_text)
 
-        # 2. 다중 구분자 대응 토큰화 (줄바꿈 외에 슬래시, 세미콜론 등으로 뭉친 문장 강제 해체)
-        # 단, 곡명 내부의 세미콜론이나 슬래시가 과도하게 쪼개지는 것을 방지하기 위해 문맥적 분할 적용
-        raw_lines = re.split(r'[\n/;\t]', clean_text)
+        # 2. 다중 구분자 분할 복구 (수율 붕괴 원인 해결)
+        # 클래식 공연 프로그램 나열 시 주로 사용되는 구분자(/, ;, |)를 토큰화 기준에 포함
+        raw_lines = re.split(r'[\n;/|]', clean_text)
         
         last_comp_id = None
         order = 1
@@ -205,8 +205,8 @@ def run_etl_process():
             line = line.strip()
             if not line: continue
             
-            # 3. 길이 기반 1차 방어벽 (곡명이 3자 미만이거나 120자를 초과하면 해설글로 간주하고 스킵)
-            if len(line) < 3 or len(line) > 120:
+            # 3. 1차 방어벽: 토큰화된 문자열이 120자를 초과하면 해설글 덩어리로 간주하여 스킵
+            if len(line) > 120:
                 continue
                 
             found_composer_key = None
@@ -224,19 +224,21 @@ def run_etl_process():
                     last_comp_id = cursor.fetchone()[0]
                     composer_cache[found_composer_key] = last_comp_id
 
+            # 문맥상 작곡가가 존재할 때 곡명 추출 시도
             if last_comp_id:
                 work_title = line
                 if found_composer_key:
                     for alias in MASTER_COMPOSERS[found_composer_key]:
                         work_title = work_title.replace(alias, "")
-                    # 문두에 남은 특수기호(: , - 등) 정제
-                    work_title = re.sub(r'^[:\-\s,·.]+', '', work_title).strip()
+                        
+                # 특수기호 및 공백 정제
+                work_title = re.sub(r'^[:\-\s,·.]+', '', work_title).strip()
                 
-                # 정제 후 최종 곡명 길이 및 유효성 재검증
-                if not work_title or len(work_title) < 3 or len(work_title) > 100: 
+                # 4. 2차 방어벽: 정제 완료된 순수 '곡명'에 대한 길이 기준 (2자 이상, 100자 이하)
+                if not work_title or len(work_title) < 2 or len(work_title) > 100: 
                     continue 
                 
-                # Work 테이블 캐싱 및 유무 확인 (중복 삽입 방지)
+                # Work 테이블 캐싱 및 유무 확인
                 cache_key = (work_title, last_comp_id)
                 if cache_key in work_cache:
                     work_id = work_cache[cache_key]
