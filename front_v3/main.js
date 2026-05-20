@@ -474,6 +474,7 @@
                     <p id="auth-message"></p>
                     <div class="auth-actions">
                         <button id="auth-submit" class="auth-primary" type="submit">로그인</button>
+                        <button id="auth-bookmarks" class="auth-secondary" type="button">내 찜</button>
                         <button id="auth-signout" class="auth-secondary" type="button">로그아웃</button>
                     </div>
                 </form>
@@ -515,6 +516,10 @@
                 setAuthMessage(authErrorMessage(error), 'error');
             }
         });
+        modal.querySelector('#auth-bookmarks').addEventListener('click', () => {
+            closeAuthModal();
+            window.ClassicHubBookmarks?.openList?.();
+        });
         document.addEventListener('keydown', e => {
             if (e.key === 'Escape' && modal.classList.contains('open')) closeAuthModal();
         });
@@ -546,6 +551,249 @@
         ensureAuthModal();
         wireAccountIcons();
         ensureAuth().catch(() => updateAccountIcons());
+    });
+})();
+
+// ══════════════════════════════════════════
+// 0-C. Bookmark UI (Firebase 인증 기반)
+// ══════════════════════════════════════════
+(function initClassicHubBookmarks() {
+    if (window.ClassicHubBookmarks) return;
+
+    const state = {
+        loaded: false,
+        loading: false,
+        ids: new Set(),
+        items: [],
+        currentPerformance: null,
+    };
+
+    function ensureStyle() {
+        if (document.getElementById('classic-bookmark-style')) return;
+        const style = document.createElement('style');
+        style.id = 'classic-bookmark-style';
+        style.textContent = `
+            .modal-bookmark-btn { display:inline-flex;align-items:center;gap:8px;padding:10px 18px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.13);color:rgba(255,255,255,.64);font-size:9px;font-weight:500;letter-spacing:.16em;text-transform:uppercase;border-radius:2px;cursor:pointer;text-decoration:none;transition:background .2s,border-color .2s,color .2s;margin-right:10px; }
+            .modal-bookmark-btn:hover { border-color:rgba(233,195,73,.55);color:#e9c349;background:rgba(233,195,73,.07); }
+            .modal-bookmark-btn.bookmarked { border-color:rgba(233,195,73,.65);color:#e9c349;background:rgba(233,195,73,.1); }
+            .modal-bookmark-btn:disabled { opacity:.5;cursor:wait; }
+            .classic-bookmark-list-modal { position:fixed;inset:0;z-index:10001;display:none;align-items:center;justify-content:center;padding:1.25rem; }
+            .classic-bookmark-list-modal.open { display:flex; }
+            .bookmark-list-backdrop { position:absolute;inset:0;background:rgba(0,0,0,.78);backdrop-filter:blur(5px); }
+            .bookmark-list-panel { position:relative;z-index:1;width:min(720px,100%);max-height:min(720px,84vh);overflow:hidden;background:#151515;border:1px solid rgba(233,195,73,.22);border-radius:16px;box-shadow:0 24px 80px rgba(0,0,0,.45);display:flex;flex-direction:column; }
+            .bookmark-list-head { display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:24px 26px 18px;border-bottom:1px solid rgba(255,255,255,.06); }
+            .bookmark-list-head h2 { margin:0 0 6px;color:#fff;font-family:'Noto Serif KR',serif;font-size:24px; }
+            .bookmark-list-head p { margin:0;color:rgba(255,255,255,.38);font-size:12px; }
+            .bookmark-list-close { width:32px;height:32px;border-radius:999px;border:1px solid rgba(255,255,255,.11);background:rgba(255,255,255,.05);color:rgba(255,255,255,.62);cursor:pointer; }
+            .bookmark-list-body { overflow:auto;padding:10px 26px 24px; }
+            .bookmark-list-empty { padding:58px 0;text-align:center;color:rgba(255,255,255,.32);font-size:13px; }
+            .bookmark-list-item { display:grid;grid-template-columns:58px 1fr auto;gap:14px;align-items:center;padding:14px 0;border-bottom:1px solid rgba(255,255,255,.055); }
+            .bookmark-list-poster { width:58px;aspect-ratio:3/4;border-radius:8px;background:rgba(255,255,255,.05);object-fit:cover; }
+            .bookmark-list-title { color:rgba(255,255,255,.86);font-family:'Noto Serif KR',serif;font-size:14px;line-height:1.45;margin-bottom:5px; }
+            .bookmark-list-meta { color:rgba(255,255,255,.38);font-size:11px;line-height:1.5; }
+            .bookmark-list-remove { padding:8px 10px;border:1px solid rgba(255,255,255,.12);border-radius:999px;background:transparent;color:rgba(255,255,255,.55);font-size:11px;cursor:pointer; }
+            .bookmark-list-remove:hover { color:#ffb4ab;border-color:rgba(255,180,171,.4); }
+        `;
+        document.head.appendChild(style);
+    }
+
+    async function requireUser() {
+        try {
+            await window.ClassicHubAuth?.ensureAuth?.();
+        } catch (e) {
+            window.ClassicHubAuth?.openAuthModal?.();
+            return null;
+        }
+        const user = window.ClassicHubAuth?.getCurrentUser?.();
+        if (!user) window.ClassicHubAuth?.openAuthModal?.();
+        return user || null;
+    }
+
+    async function loadBookmarks(force = false) {
+        const user = await requireUser();
+        if (!user) return [];
+        if (state.loaded && !force) return state.items;
+        if (state.loading) return state.items;
+        state.loading = true;
+        try {
+            const res = await window.ClassicHubAPI.getBookmarks();
+            state.items = res.data || [];
+            state.ids = new Set(state.items.map(item => Number(item.performance_id)));
+            state.loaded = true;
+            return state.items;
+        } finally {
+            state.loading = false;
+        }
+    }
+
+    const isBookmarked = (performanceId) => state.ids.has(Number(performanceId));
+
+    function setButtonState(button, performanceId, loading = false) {
+        if (!button) return;
+        const bookmarked = isBookmarked(performanceId);
+        button.disabled = loading;
+        button.classList.toggle('bookmarked', bookmarked);
+        button.textContent = loading ? '처리 중...' : (bookmarked ? '♥ 찜됨' : '♡ 찜하기');
+        button.setAttribute('aria-pressed', bookmarked ? 'true' : 'false');
+    }
+
+    async function toggle(performance) {
+        if (!performance?.id) return;
+        const user = await requireUser();
+        if (!user) return;
+        await loadBookmarks();
+        const id = Number(performance.id);
+        if (isBookmarked(id)) {
+            await window.ClassicHubAPI.removeBookmark(id);
+            state.ids.delete(id);
+            state.items = state.items.filter(item => Number(item.performance_id) !== id);
+        } else {
+            await window.ClassicHubAPI.addBookmark(id);
+            state.ids.add(id);
+            state.items.unshift({
+                performance_id: id,
+                title: performance.title,
+                poster_url: performance.poster,
+                start_date: performance.rawStartDate || performance.startDate,
+                venue: performance.venue,
+                status: performance.status,
+            });
+        }
+    }
+
+    function bindModal(performance) {
+        if (!performance?.id) return;
+        ensureStyle();
+        state.currentPerformance = performance;
+        const foot = document.querySelector('#concert-modal .modal-foot');
+        if (!foot) return;
+        let button = document.getElementById('modal-bookmark-btn');
+        if (!button) {
+            button = document.createElement('button');
+            button.type = 'button';
+            button.id = 'modal-bookmark-btn';
+            button.className = 'modal-bookmark-btn';
+            const ticketButton = document.getElementById('modal-kopis-btn');
+            foot.insertBefore(button, ticketButton || null);
+        }
+        button.onclick = async () => {
+            setButtonState(button, performance.id, true);
+            try {
+                await toggle(performance);
+                setButtonState(button, performance.id, false);
+                renderList();
+            } catch (e) {
+                console.error('북마크 처리 실패:', e);
+                button.disabled = false;
+                button.textContent = '다시 시도';
+            }
+        };
+        setButtonState(button, performance.id, false);
+        if (window.ClassicHubAuth?.getCurrentUser?.()) {
+            loadBookmarks().then(() => setButtonState(button, performance.id, false)).catch(() => {});
+        }
+    }
+
+    function ensureListModal() {
+        ensureStyle();
+        let modal = document.getElementById('classic-bookmark-list-modal');
+        if (modal) return modal;
+        modal = document.createElement('div');
+        modal.id = 'classic-bookmark-list-modal';
+        modal.className = 'classic-bookmark-list-modal';
+        modal.innerHTML = `
+            <div class="bookmark-list-backdrop"></div>
+            <section class="bookmark-list-panel" role="dialog" aria-modal="true" aria-labelledby="bookmark-list-title">
+                <div class="bookmark-list-head">
+                    <div>
+                        <h2 id="bookmark-list-title">내 찜 목록</h2>
+                        <p id="bookmark-list-count">로그인 후 찜한 공연을 확인할 수 있습니다.</p>
+                    </div>
+                    <button type="button" class="bookmark-list-close" aria-label="닫기">×</button>
+                </div>
+                <div class="bookmark-list-body" id="bookmark-list-body"></div>
+            </section>
+        `;
+        document.body.appendChild(modal);
+        modal.querySelector('.bookmark-list-backdrop').addEventListener('click', closeList);
+        modal.querySelector('.bookmark-list-close').addEventListener('click', closeList);
+        return modal;
+    }
+
+    function closeList() {
+        document.getElementById('classic-bookmark-list-modal')?.classList.remove('open');
+        document.body.style.overflow = '';
+    }
+
+    function renderList() {
+        const modal = document.getElementById('classic-bookmark-list-modal');
+        if (!modal) return;
+        const body = modal.querySelector('#bookmark-list-body');
+        const count = modal.querySelector('#bookmark-list-count');
+        count.textContent = `${state.items.length.toLocaleString()}개 공연`;
+        if (!state.items.length) {
+            body.innerHTML = '<div class="bookmark-list-empty">아직 찜한 공연이 없습니다.</div>';
+            return;
+        }
+        body.innerHTML = state.items.map(item => `
+            <article class="bookmark-list-item" data-performance-id="${Number(item.performance_id)}">
+                ${item.poster_url ? `<img class="bookmark-list-poster" src="${window.ClassicHubAPI.escapeHTML(item.poster_url)}" alt="">` : '<div class="bookmark-list-poster"></div>'}
+                <div>
+                    <div class="bookmark-list-title">${window.ClassicHubAPI.escapeHTML(item.title || '')}</div>
+                    <div class="bookmark-list-meta">${window.ClassicHubAPI.escapeHTML(item.start_date || '')} · ${window.ClassicHubAPI.escapeHTML(item.venue || '')}</div>
+                </div>
+                <button type="button" class="bookmark-list-remove">삭제</button>
+            </article>
+        `).join('');
+        body.querySelectorAll('.bookmark-list-remove').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const item = btn.closest('[data-performance-id]');
+                const id = Number(item.dataset.performanceId);
+                btn.disabled = true;
+                try {
+                    await window.ClassicHubAPI.removeBookmark(id);
+                    state.ids.delete(id);
+                    state.items = state.items.filter(entry => Number(entry.performance_id) !== id);
+                    renderList();
+                    if (state.currentPerformance?.id === id) {
+                        setButtonState(document.getElementById('modal-bookmark-btn'), id, false);
+                    }
+                } catch (e) {
+                    console.error('북마크 삭제 실패:', e);
+                    btn.disabled = false;
+                }
+            });
+        });
+    }
+
+    async function openList() {
+        const modal = ensureListModal();
+        modal.classList.add('open');
+        document.body.style.overflow = 'hidden';
+        modal.querySelector('#bookmark-list-body').innerHTML = '<div class="bookmark-list-empty">찜 목록을 불러오는 중입니다.</div>';
+        try {
+            await loadBookmarks(true);
+            renderList();
+        } catch (e) {
+            console.error('북마크 목록 조회 실패:', e);
+            modal.querySelector('#bookmark-list-count').textContent = '조회 실패';
+            modal.querySelector('#bookmark-list-body').innerHTML = '<div class="bookmark-list-empty">찜 목록을 불러오지 못했습니다.</div>';
+        }
+    }
+
+    window.ClassicHubBookmarks = {
+        bindModal,
+        openList,
+        closeList,
+        loadBookmarks,
+        isBookmarked,
+    };
+
+    window.ClassicHubAuth?.onChange?.(() => {
+        state.loaded = false;
+        state.ids = new Set();
+        state.items = [];
+        if (state.currentPerformance) bindModal(state.currentPerformance);
     });
 })();
 

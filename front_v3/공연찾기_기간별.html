@@ -555,6 +555,8 @@ window.openModal = function openModal(p) {
         kbtn.style.opacity = '.45';
         kbtn.textContent = '예매 정보 없음';
     }
+    // 북마크 버튼 연결
+    window.ClassicHubBookmarks?.bindModal?.(p);
     // 열기
     overlay.classList.add('open');
     document.body.style.overflow = 'hidden';

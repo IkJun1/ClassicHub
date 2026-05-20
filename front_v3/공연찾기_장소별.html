@@ -596,6 +596,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             kbtn.style.opacity = '.45';
             kbtn.textContent = '예매 정보 없음';
         }
+        window.ClassicHubBookmarks?.bindModal?.(p);
         overlay.classList.add('open');
         document.body.style.overflow = 'hidden';
     };
