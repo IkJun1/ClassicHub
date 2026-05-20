@@ -63,11 +63,17 @@
     async function request(path, params, options = {}) {
         const query = params ? toQuery(params) : '';
         const url = `${API_BASE}${path}${query ? `?${query}` : ''}`;
-        const headers = { ...(options.headers || {}) };
-        if (options.body && !headers['Content-Type']) headers['Content-Type'] = 'application/json';
+        const { auth = false, headers: optionHeaders = {}, ...fetchOptions } = options;
+        const headers = { ...optionHeaders };
+        if (fetchOptions.body && !headers['Content-Type']) headers['Content-Type'] = 'application/json';
+        if (auth) {
+            const token = await window.ClassicHubAuth?.getIdToken?.();
+            if (!token) throw new Error('로그인이 필요합니다.');
+            headers.Authorization = `Bearer ${token}`;
+        }
         const res = await fetch(url, {
+            ...fetchOptions,
             headers,
-            ...options,
         });
         const body = await res.json().catch(() => ({}));
         if (!res.ok || body.success === false) {
@@ -138,12 +144,20 @@
         getVenuesByRegion: () => request('/venues/by-region'),
         getComposers: (params) => request('/composers', params),
         getArtists: (params) => request('/artists', params),
-        addBookmark: (firebase_uid, performance_id) => request('/bookmarks', null, {
-            method: 'POST',
-            body: JSON.stringify({ firebase_uid, performance_id }),
-        }),
-        removeBookmark: (firebase_uid, performance_id) => request('/bookmarks', { firebase_uid, performance_id }, { method: 'DELETE' }),
-        getBookmarks: (firebase_uid) => request(`/bookmarks/${encodeURIComponent(firebase_uid)}`),
+        addBookmark: async (firebase_uidOrPerformanceId, maybePerformanceId) => {
+            const performance_id = maybePerformanceId ?? firebase_uidOrPerformanceId;
+            const firebase_uid = maybePerformanceId ? firebase_uidOrPerformanceId : (window.ClassicHubAuth?.getCurrentUser?.()?.uid || 'firebase-auth-user');
+            return request('/bookmarks', null, {
+                method: 'POST',
+                auth: true,
+                body: JSON.stringify({ firebase_uid, performance_id }),
+            });
+        },
+        removeBookmark: (_firebase_uidOrPerformanceId, maybePerformanceId) => {
+            const performance_id = maybePerformanceId ?? _firebase_uidOrPerformanceId;
+            return request('/bookmarks', { performance_id }, { method: 'DELETE', auth: true });
+        },
+        getBookmarks: () => request('/bookmarks', null, { auth: true }),
         normalizePerformanceSummary,
         normalizePerformanceDetail,
         derivePerformanceStatus,
@@ -217,6 +231,324 @@
     document.getElementById('search-overlay-backdrop').addEventListener('click', closeSearch);
 })();
 
+// ══════════════════════════════════════════
+// 0-B. Firebase Auth (프론트 전용 로그인/회원가입)
+// ══════════════════════════════════════════
+(function initClassicHubAuth() {
+    if (window.ClassicHubAuth) return;
+
+    const FIREBASE_VERSION = '10.12.5';
+    const state = {
+        auth: null,
+        user: null,
+        ready: false,
+        initPromise: null,
+        listeners: [],
+        modalMode: 'signin',
+    };
+
+    const isConfigured = (config) => Boolean(
+        config &&
+        config.apiKey &&
+        config.authDomain &&
+        config.projectId &&
+        config.appId
+    );
+
+    const loadConfig = async () => {
+        if (window.CLASSICHUB_FIREBASE_CONFIG) return window.CLASSICHUB_FIREBASE_CONFIG;
+        const stored = localStorage.getItem('CLASSICHUB_FIREBASE_CONFIG');
+        if (stored) {
+            try { return JSON.parse(stored); }
+            catch (e) { console.warn('Firebase 설정 JSON 파싱 실패:', e); }
+        }
+        try {
+            const module = await import('./firebase-config.js');
+            return module.firebaseConfig || module.default || {};
+        } catch (e) {
+            console.warn('firebase-config.js 로드 실패:', e);
+            return {};
+        }
+    };
+
+    async function ensureAuth() {
+        if (state.initPromise) return state.initPromise;
+        state.initPromise = (async () => {
+            const config = await loadConfig();
+            if (!isConfigured(config)) {
+                throw new Error('Firebase Web Config가 아직 설정되지 않았습니다.');
+            }
+
+            const appMod = await import(`https://www.gstatic.com/firebasejs/${FIREBASE_VERSION}/firebase-app.js`);
+            const authMod = await import(`https://www.gstatic.com/firebasejs/${FIREBASE_VERSION}/firebase-auth.js`);
+            const app = appMod.getApps().length ? appMod.getApp() : appMod.initializeApp(config);
+            state.auth = authMod.getAuth(app);
+            state.firebase = authMod;
+
+            authMod.onAuthStateChanged(state.auth, (user) => {
+                state.user = user;
+                state.ready = true;
+                updateAccountIcons();
+                state.listeners.forEach(listener => listener(user));
+            });
+
+            return state.auth;
+        })();
+        return state.initPromise;
+    }
+
+    const authErrorMessage = (error) => {
+        const code = error?.code || '';
+        if (code.includes('invalid-email')) return '이메일 형식이 올바르지 않습니다.';
+        if (code.includes('missing-password')) return '비밀번호를 입력해 주세요.';
+        if (code.includes('weak-password')) return '비밀번호는 6자 이상이어야 합니다.';
+        if (code.includes('email-already-in-use')) return '이미 가입된 이메일입니다.';
+        if (code.includes('user-not-found') || code.includes('wrong-password') || code.includes('invalid-credential')) {
+            return '이메일 또는 비밀번호가 올바르지 않습니다.';
+        }
+        if (code.includes('network-request-failed')) return '네트워크 연결을 확인해 주세요.';
+        return error?.message || '인증 처리 중 문제가 발생했습니다.';
+    };
+
+    async function signIn(email, password) {
+        const auth = await ensureAuth();
+        const { signInWithEmailAndPassword } = state.firebase;
+        return signInWithEmailAndPassword(auth, email, password);
+    }
+
+    async function signUp(email, password, nickname) {
+        const auth = await ensureAuth();
+        const { createUserWithEmailAndPassword, updateProfile } = state.firebase;
+        const credential = await createUserWithEmailAndPassword(auth, email, password);
+        if (nickname) await updateProfile(credential.user, { displayName: nickname });
+        return credential;
+    }
+
+    async function signOut() {
+        const auth = await ensureAuth();
+        return state.firebase.signOut(auth);
+    }
+
+    async function getIdToken(forceRefresh = false) {
+        await ensureAuth();
+        if (!state.user) return '';
+        return state.user.getIdToken(forceRefresh);
+    }
+
+    function getCurrentUser() {
+        return state.user;
+    }
+
+    function onChange(listener) {
+        state.listeners.push(listener);
+        if (state.ready) listener(state.user);
+        return () => {
+            state.listeners = state.listeners.filter(item => item !== listener);
+        };
+    }
+
+    function accountLabel() {
+        if (!state.user) return '로그인';
+        return state.user.displayName || state.user.email || '내 계정';
+    }
+
+    function updateAccountIcons() {
+        document.querySelectorAll('.material-symbols-outlined').forEach(el => {
+            if (el.textContent.trim() !== 'account_circle') return;
+            el.title = state.user ? `${accountLabel()} · 클릭하여 로그아웃` : '로그인 / 회원가입';
+            el.classList.toggle('classic-auth-signed-in', Boolean(state.user));
+        });
+    }
+
+    function setMode(mode) {
+        state.modalMode = mode;
+        const modal = document.getElementById('classic-auth-modal');
+        if (!modal) return;
+        modal.querySelectorAll('[data-auth-mode]').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.authMode === mode);
+        });
+        modal.querySelector('#auth-nickname-row').style.display = mode === 'signup' ? 'block' : 'none';
+        modal.querySelector('#auth-submit').textContent = mode === 'signup' ? '회원가입' : '로그인';
+        modal.querySelector('#auth-helper').textContent = mode === 'signup'
+            ? '이메일과 비밀번호로 새 계정을 만듭니다.'
+            : 'Firebase 계정으로 로그인합니다.';
+        setAuthMessage('');
+    }
+
+    function setAuthMessage(message, type = 'info') {
+        const el = document.getElementById('auth-message');
+        if (!el) return;
+        el.textContent = message || '';
+        el.dataset.type = type;
+    }
+
+    function closeAuthModal() {
+        document.getElementById('classic-auth-modal')?.classList.remove('open');
+        document.body.style.overflow = '';
+    }
+
+    async function openAuthModal() {
+        const modal = ensureAuthModal();
+        modal.classList.add('open');
+        document.body.style.overflow = 'hidden';
+        setMode(state.modalMode || 'signin');
+
+        if (state.user) {
+            setAuthMessage(`${accountLabel()} 계정으로 로그인되어 있습니다.`, 'success');
+        } else {
+            setAuthMessage('');
+        }
+
+        try {
+            await ensureAuth();
+            modal.classList.toggle('not-configured', false);
+            setTimeout(() => modal.querySelector('#auth-email')?.focus(), 40);
+        } catch (e) {
+            modal.classList.toggle('not-configured', true);
+            setAuthMessage('Firebase Web Config를 먼저 설정해 주세요.', 'error');
+        }
+    }
+
+    function ensureAuthModal() {
+        let modal = document.getElementById('classic-auth-modal');
+        if (modal) return modal;
+
+        const style = document.createElement('style');
+        style.textContent = `
+            .classic-auth-signed-in { color: #e9c349; }
+            #classic-auth-modal { position: fixed; inset: 0; z-index: 10000; display: none; align-items: center; justify-content: center; padding: 1.25rem; }
+            #classic-auth-modal.open { display: flex; }
+            .auth-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,.76); backdrop-filter: blur(5px); }
+            .auth-panel { position: relative; z-index: 1; width: min(420px, 100%); background: #151515; border: 1px solid rgba(233,195,73,.22); border-radius: 16px; padding: 28px; box-shadow: 0 24px 80px rgba(0,0,0,.42); }
+            .auth-close { position: absolute; top: 14px; right: 14px; width: 30px; height: 30px; border-radius: 999px; border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.05); color: rgba(255,255,255,.58); cursor: pointer; }
+            .auth-title { margin: 0 0 6px; color: #fff; font-family: 'Noto Serif KR', serif; font-size: 24px; }
+            .auth-subtitle { margin: 0 0 22px; color: rgba(255,255,255,.42); font-size: 12px; line-height: 1.6; }
+            .auth-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 18px; }
+            .auth-tabs button { padding: 10px 12px; border-radius: 999px; border: 1px solid rgba(255,255,255,.09); background: rgba(255,255,255,.035); color: rgba(255,255,255,.55); cursor: pointer; font-size: 12px; }
+            .auth-tabs button.active { background: #e9c349; color: #131313; border-color: #e9c349; }
+            .auth-field { margin-bottom: 12px; }
+            .auth-field label { display: block; margin-bottom: 6px; color: rgba(255,255,255,.48); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; }
+            .auth-field input { width: 100%; box-sizing: border-box; border: 1px solid rgba(255,255,255,.1); border-radius: 10px; background: rgba(255,255,255,.045); color: #fff; padding: 12px 13px; outline: none; font-size: 14px; }
+            .auth-field input:focus { border-color: rgba(233,195,73,.6); }
+            .auth-config-warning { display: none; margin: 0 0 14px; padding: 12px; border-radius: 10px; background: rgba(255,180,80,.08); border: 1px solid rgba(255,180,80,.18); color: rgba(255,225,190,.78); font-size: 12px; line-height: 1.6; }
+            #classic-auth-modal.not-configured .auth-config-warning { display: block; }
+            #auth-message { min-height: 20px; margin: 4px 0 14px; color: rgba(255,255,255,.48); font-size: 12px; line-height: 1.5; }
+            #auth-message[data-type="error"] { color: #ffb4ab; }
+            #auth-message[data-type="success"] { color: #9ee4b2; }
+            .auth-actions { display: flex; gap: 10px; align-items: center; }
+            .auth-primary { flex: 1; padding: 12px 16px; border-radius: 999px; border: 1px solid #e9c349; background: #e9c349; color: #131313; cursor: pointer; font-weight: 700; }
+            .auth-secondary { padding: 12px 14px; border-radius: 999px; border: 1px solid rgba(255,255,255,.12); background: transparent; color: rgba(255,255,255,.62); cursor: pointer; }
+            .auth-foot { margin-top: 16px; color: rgba(255,255,255,.28); font-size: 11px; line-height: 1.6; }
+        `;
+        document.head.appendChild(style);
+
+        modal = document.createElement('div');
+        modal.id = 'classic-auth-modal';
+        modal.innerHTML = `
+            <div class="auth-backdrop"></div>
+            <div class="auth-panel" role="dialog" aria-modal="true" aria-labelledby="auth-title">
+                <button type="button" class="auth-close" aria-label="닫기">×</button>
+                <h2 id="auth-title" class="auth-title">계정</h2>
+                <p id="auth-helper" class="auth-subtitle">Firebase 계정으로 로그인합니다.</p>
+                <div class="auth-tabs">
+                    <button type="button" data-auth-mode="signin">로그인</button>
+                    <button type="button" data-auth-mode="signup">회원가입</button>
+                </div>
+                <p class="auth-config-warning">
+                    <strong>Firebase 설정 필요</strong><br>
+                    <code>front_v3/firebase-config.js</code>에 Web Config 값을 채우면 로그인/회원가입을 사용할 수 있습니다.
+                </p>
+                <form id="auth-form">
+                    <div class="auth-field" id="auth-nickname-row">
+                        <label for="auth-nickname">닉네임</label>
+                        <input id="auth-nickname" type="text" autocomplete="nickname" placeholder="닉네임">
+                    </div>
+                    <div class="auth-field">
+                        <label for="auth-email">이메일</label>
+                        <input id="auth-email" type="email" autocomplete="email" placeholder="name@example.com" required>
+                    </div>
+                    <div class="auth-field">
+                        <label for="auth-password">비밀번호</label>
+                        <input id="auth-password" type="password" autocomplete="current-password" placeholder="6자 이상" required>
+                    </div>
+                    <p id="auth-message"></p>
+                    <div class="auth-actions">
+                        <button id="auth-submit" class="auth-primary" type="submit">로그인</button>
+                        <button id="auth-signout" class="auth-secondary" type="button">로그아웃</button>
+                    </div>
+                </form>
+                <p class="auth-foot">로그인 토큰은 북마크처럼 인증이 필요한 API 요청에만 자동으로 첨부됩니다.</p>
+            </div>
+        `;
+        document.body.appendChild(modal);
+
+        modal.querySelector('.auth-backdrop').addEventListener('click', closeAuthModal);
+        modal.querySelector('.auth-close').addEventListener('click', closeAuthModal);
+        modal.querySelectorAll('[data-auth-mode]').forEach(btn => {
+            btn.addEventListener('click', () => setMode(btn.dataset.authMode));
+        });
+        modal.querySelector('#auth-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const submit = modal.querySelector('#auth-submit');
+            const email = modal.querySelector('#auth-email').value.trim();
+            const password = modal.querySelector('#auth-password').value;
+            const nickname = modal.querySelector('#auth-nickname').value.trim();
+            submit.disabled = true;
+            setAuthMessage('처리 중입니다...');
+            try {
+                if (state.modalMode === 'signup') await signUp(email, password, nickname);
+                else await signIn(email, password);
+                setAuthMessage('로그인되었습니다.', 'success');
+                setTimeout(closeAuthModal, 450);
+            } catch (error) {
+                setAuthMessage(authErrorMessage(error), 'error');
+            } finally {
+                submit.disabled = false;
+            }
+        });
+        modal.querySelector('#auth-signout').addEventListener('click', async () => {
+            try {
+                await signOut();
+                setAuthMessage('로그아웃되었습니다.', 'success');
+                setTimeout(closeAuthModal, 350);
+            } catch (error) {
+                setAuthMessage(authErrorMessage(error), 'error');
+            }
+        });
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape' && modal.classList.contains('open')) closeAuthModal();
+        });
+        setMode('signin');
+        return modal;
+    }
+
+    function wireAccountIcons() {
+        document.querySelectorAll('.material-symbols-outlined').forEach(el => {
+            if (el.textContent.trim() !== 'account_circle') return;
+            el.addEventListener('click', openAuthModal);
+        });
+        updateAccountIcons();
+    }
+
+    window.ClassicHubAuth = {
+        ensureAuth,
+        signIn,
+        signUp,
+        signOut,
+        getIdToken,
+        getCurrentUser,
+        onChange,
+        openAuthModal,
+        refreshAccountIcons: updateAccountIcons,
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+        ensureAuthModal();
+        wireAccountIcons();
+        ensureAuth().catch(() => updateAccountIcons());
+    });
+})();
+
 document.addEventListener('DOMContentLoaded', () => {
     const API = window.ClassicHubAPI;
 
@@ -238,12 +570,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 계정 아이콘은 백엔드 사용자/인증 플로우가 확정되기 전까지 비활성 안내만 제공
-    document.querySelectorAll('.material-symbols-outlined').forEach(el => {
-        if (el.textContent.trim() === 'account_circle') {
-            el.title = '계정 기능은 준비 중입니다';
-        }
-    });
+    window.ClassicHubAuth?.refreshAccountIcons?.();
 
     // ══════════════════════════════════════════
     // 2. 메인 포스터 슬라이더
