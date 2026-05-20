@@ -8,9 +8,12 @@
 (function initClassicHubAPI() {
     if (window.ClassicHubAPI) return;
 
+    const isLocalStaticServer = ['localhost', '127.0.0.1', '0.0.0.0'].includes(window.location.hostname)
+        && window.location.port
+        && window.location.port !== '8000';
     const API_BASE = window.CLASSICHUB_API_BASE ||
         localStorage.getItem('CLASSICHUB_API_BASE') ||
-        (window.location.protocol === 'file:' ? 'http://localhost:8000/api' : '/api');
+        (window.location.protocol === 'file:' || isLocalStaticServer ? 'http://localhost:8000/api' : '/api');
 
     const toQuery = (params = {}) => {
         const q = new URLSearchParams();
@@ -60,8 +63,10 @@
     async function request(path, params, options = {}) {
         const query = params ? toQuery(params) : '';
         const url = `${API_BASE}${path}${query ? `?${query}` : ''}`;
+        const headers = { ...(options.headers || {}) };
+        if (options.body && !headers['Content-Type']) headers['Content-Type'] = 'application/json';
         const res = await fetch(url, {
-            headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
+            headers,
             ...options,
         });
         const body = await res.json().catch(() => ({}));
