@@ -267,7 +267,7 @@
                 : composers.filter((c) => c.era === activePeriod);
 
             if (!items.length) {
-                listEl.innerHTML = '<div class="text-white/35 text-sm">해당 시대의 작곡가 데이터가 없습니다.</div>';
+                listEl.innerHTML = '<div class="text-white/35 text-sm">해당 시대의 작곡가를 찾을 수 없습니다.</div>';
                 return;
             }
 
@@ -281,9 +281,6 @@
                         <span class="text-white/40 text-xs">${c.work_count || 0} works</span>
                     </div>
                     <h2 class="font-headline text-2xl text-on-surface mb-3 leading-tight">${escapeHTML(composerName)}</h2>
-                    <p class="text-sm text-on-surface-variant font-light leading-relaxed">
-                        DB에 등록된 작품 ${c.work_count || 0}개와 연결된 작곡가입니다.
-                    </p>
                     <p class="mt-5 inline-flex items-center gap-2 text-[10px] tracking-[0.22em] uppercase text-primary/80">
                         공연 보기
                         <span class="material-symbols-outlined text-sm" aria-hidden="true">arrow_forward</span>
@@ -308,7 +305,7 @@
             });
         }
 
-        listEl.innerHTML = '<div class="text-white/35 text-sm">작곡가 데이터를 불러오는 중입니다.</div>';
+        listEl.innerHTML = '<div class="text-white/35 text-sm">작곡가 목록을 불러오는 중입니다.</div>';
         try {
             const res = await API.getComposers({});
 	            composers = (res.data || []).map(c => ({

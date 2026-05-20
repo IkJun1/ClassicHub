@@ -263,7 +263,7 @@
 	            if (!listEl) return;
 	            const items = getFilteredArtists();
 	            if (!items.length) {
-		                listEl.innerHTML = '<div class="text-white/35 text-sm">조건에 맞는 아티스트 데이터가 없습니다.</div>';
+		                listEl.innerHTML = '<div class="text-white/35 text-sm">조건에 맞는 아티스트를 찾을 수 없습니다.</div>';
 		                if (summaryEl) summaryEl.textContent = '0명';
 	                if (paginationEl) paginationEl.innerHTML = '';
 	                return;
@@ -287,9 +287,6 @@
                             <div class="min-w-0">
                                 <div class="text-primary text-[10px] tracking-widest uppercase font-bold mb-1">${role}</div>
                                 <h2 class="font-headline text-xl text-on-surface truncate">${a.name}</h2>
-                                <p class="text-sm text-on-surface-variant font-light leading-relaxed">
-                                    DB에 등록된 클래식 공연 아티스트입니다.
-                                </p>
                             </div>
                         </div>
                     </article>
@@ -357,7 +354,7 @@
 		            });
 		        }
 
-        listEl.innerHTML = '<div class="text-white/35 text-sm">아티스트 데이터를 불러오는 중입니다.</div>';
+        listEl.innerHTML = '<div class="text-white/35 text-sm">아티스트 목록을 불러오는 중입니다.</div>';
         try {
             const res = await API.getArtists({});
 	            artists = (res.data || [])
