@@ -6,6 +6,7 @@ POST   /api/bookmarks                — 찜 추가
 DELETE /api/bookmarks                — 찜 삭제 (query params: firebase_uid, performance_id)
 GET    /api/bookmarks/{firebase_uid} — 찜 목록 조회
 """
+
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import JSONResponse
 from sqlalchemy.exc import IntegrityError
@@ -15,19 +16,39 @@ from database import get_db
 from models import Performance, User, UserBookmark
 from schemas import BookmarkCreate, MessageResponse, PaginatedResponse, UserBookmarkItem
 
+# 🔐 새로 만든 의존성 파일에서 인증 함수 임포트
+from dependencies import get_current_user 
+
 router = APIRouter(tags=["북마크"])
 
-
 @router.post("/bookmarks", summary="찜 추가", response_model=MessageResponse)
-def add_bookmark(body: BookmarkCreate, db: Session = Depends(get_db)):
-    # firebase_uid는 프론트에서 받는 외부 값이므로 반드시 DB 존재 여부 검증
-    user = db.query(User).filter(User.firebase_uid == body.firebase_uid).first()
-    if not user:
-        return JSONResponse(status_code=404, content={
-            "success": False, "data": None,
-            "message": "사용자를 찾을 수 없습니다.", "error_code": "USER_NOT_FOUND",
-        })
+def add_bookmark(
+    body: BookmarkCreate, 
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user) # 🛡️ 토큰 검증 미들웨어 부착
+):
+    # 🚨 보안: 프론트가 보낸 body.firebase_uid 대신 위조 불가능한 토큰의 UID 사용
+    uid = current_user["firebase_uid"]
 
+    # 1. User 테이블 UPSERT (SQLAlchemy 방식)
+    user = db.query(User).filter(User.firebase_uid == uid).first()
+    if user:
+        # 이미 존재하면 이메일과 닉네임 최신화 (Stale Data 방지)
+        user.email = current_user["email"]
+        user.nickname = current_user["nickname"]
+    else:
+        # 최초 접근이면 신규 유저 생성
+        user = User(
+            firebase_uid=uid, 
+            email=current_user["email"], 
+            nickname=current_user["nickname"]
+        )
+        db.add(user)
+    
+    # User 정보를 DB에 확정 (외래 키 제약 조건 통과를 위해)
+    db.commit() 
+
+    # 2. 공연 존재 여부 검증
     perf = db.query(Performance).filter(Performance.id == body.performance_id).first()
     if not perf:
         return JSONResponse(status_code=404, content={
@@ -35,23 +56,20 @@ def add_bookmark(body: BookmarkCreate, db: Session = Depends(get_db)):
             "message": "공연을 찾을 수 없습니다.", "error_code": "PERFORMANCE_NOT_FOUND",
         })
 
-    # 중복 찜 확인: 이미 존재하면 서버 오류가 아닌 200으로 안전하게 응답
+    # 3. 찜 중복 검사 및 추가
     existing = db.query(UserBookmark).filter(
-        UserBookmark.firebase_uid == body.firebase_uid,
+        UserBookmark.firebase_uid == uid,
         UserBookmark.performance_id == body.performance_id,
     ).first()
     if existing:
         return {"success": True, "message": "이미 찜한 공연입니다."}
 
-    bookmark = UserBookmark(
-        firebase_uid=body.firebase_uid,
-        performance_id=body.performance_id,
-    )
+    bookmark = UserBookmark(firebase_uid=uid, performance_id=body.performance_id)
     db.add(bookmark)
+    
     try:
         db.commit()
     except IntegrityError:
-        # 동시 요청으로 직전 중복 확인을 통과한 경우에도 DB UNIQUE 제약이 막음 — rollback 후 안전 응답
         db.rollback()
         return {"success": True, "message": "이미 찜한 공연입니다."}
 
@@ -60,14 +78,17 @@ def add_bookmark(body: BookmarkCreate, db: Session = Depends(get_db)):
 
 @router.delete("/bookmarks", summary="찜 삭제", response_model=MessageResponse)
 def remove_bookmark(
-    firebase_uid: str = Query(..., description="Firebase Auth UID"),
     performance_id: int = Query(..., description="공연 ID"),
     db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user) # 🛡️ 토큰 검증
 ):
+    uid = current_user["firebase_uid"]
+    
     bookmark = db.query(UserBookmark).filter(
-        UserBookmark.firebase_uid == firebase_uid,
+        UserBookmark.firebase_uid == uid,
         UserBookmark.performance_id == performance_id,
     ).first()
+    
     if not bookmark:
         return JSONResponse(status_code=404, content={
             "success": False, "data": None,
@@ -79,24 +100,18 @@ def remove_bookmark(
     return {"success": True, "message": "찜 목록에서 삭제되었습니다."}
 
 
-@router.get(
-    "/bookmarks/{firebase_uid}",
-    summary="찜 목록 조회",
-    response_model=PaginatedResponse[UserBookmarkItem],
-)
-def get_bookmarks(firebase_uid: str, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.firebase_uid == firebase_uid).first()
-    if not user:
-        return JSONResponse(status_code=404, content={
-            "success": False, "data": None,
-            "message": "사용자를 찾을 수 없습니다.", "error_code": "USER_NOT_FOUND",
-        })
+# 💡 프론트엔드 연동 팁: 이제 {firebase_uid} 경로 변수가 없어도 내 토큰으로 목록을 가져옵니다.
+@router.get("/bookmarks", summary="내 찜 목록 조회", response_model=PaginatedResponse[UserBookmarkItem])
+def get_my_bookmarks(
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user) # 🛡️ 토큰 검증
+):
+    uid = current_user["firebase_uid"]
 
-    # performance를 한 번에 로드 — UserBookmark.performance를 lazy load하면 N+1 발생
     bookmarks = (
         db.query(UserBookmark)
         .options(joinedload(UserBookmark.performance))
-        .filter(UserBookmark.firebase_uid == firebase_uid)
+        .filter(UserBookmark.firebase_uid == uid)
         .all()
     )
 

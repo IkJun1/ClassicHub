@@ -63,16 +63,20 @@ app = FastAPI(
 
 
 # ── CORS 미들웨어 ─────────────────────────────────────────────────────────────
-# 왜 allow_origins=["*"]인가:
-# - 프론트 HTML을 file:// 프로토콜로 직접 열 경우 Origin이 null로 오는데
-#   이를 허용하려면 "*"이 필요
-# - 개발 환경 전용. 배포 시에는 실제 도메인으로 제한할 것
+# 변경 사유:
+# - 기존 allow_origins=["*"] 환경에서는 보안상 인증 토큰(Authorization 헤더)을 주고받을 수 없습니다.
+# - 파이어베이스 인증 도입 및 토큰 통신을 위해 allow_credentials를 True로 변경하고,
+#   프론트엔드가 실행되는 로컬 개발 서버 주소(Live Server 등)를 명시적으로 허용해야 합니다.
+# - 주의: 로컬 테스트 시 반드시 file:// 경로가 아닌 http://localhost:5500 환경에서 브라우저를 열어야 합니다.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=False,   # allow_origins="*"와 함께 사용 시 반드시 False
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=[
+        "http://localhost:5500",    # VS Code Live Server 기본 도메인 주소
+        "http://127.0.0.1:5500",   # 로컬 루프백 IP 주소 대응
+    ],
+    allow_credentials=True,         # 인증 토큰(Authorization 헤더) 및 쿠키 통신 허용
+    allow_methods=["*"],            # GET, POST, DELETE 등 모든 HTTP 메서드 허용
+    allow_headers=["*"],            # Authorization, Content-Type 등 모든 헤더 허용
 )
 
 
