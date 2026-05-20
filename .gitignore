@@ -24,3 +24,4 @@ datasets/
 logs/
 *.csv
 *.tsv
+*.sqbpro
