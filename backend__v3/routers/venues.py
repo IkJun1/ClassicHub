@@ -6,7 +6,7 @@ GET /api/venues — 공연 장소 목록 조회
 - 장소별 조회 페이지의 탭 목록 데이터 제공
 - 공연을 장소로 필터링하는 기능은 performances.py의 ?venue= 파라미터 담당
 """
-from typing import List
+from typing import Dict, List
 
 from fastapi import APIRouter, Depends
 from sqlalchemy import distinct
@@ -17,6 +17,39 @@ from models import Performance
 from schemas import SuccessResponse
 
 router = APIRouter(tags=["장소"])
+
+
+@router.get(
+    "/venues/by-region",
+    summary="지역별 공연 장소 목록 조회",
+    response_model=SuccessResponse[Dict[str, List[str]]],
+)
+def get_venues_by_region(db: Session = Depends(get_db)):
+    """
+    지역 탭 → 공연장 선택 UI에서 사용할 지역별 공연장 목록을 반환합니다.
+
+    기존 /venues 응답(List[str])은 유지하고, 장소별 조회 화면처럼 지역 단위
+    그룹핑이 필요한 화면만 이 엔드포인트를 사용합니다.
+    """
+    rows = (
+        db.query(Performance.region, Performance.venue)
+        .filter(
+            Performance.venue != None,  # noqa: E711
+            Performance.venue != "",
+            Performance.region != None,  # noqa: E711
+            Performance.region != "",
+            Performance.region != "-",
+        )
+        .group_by(Performance.region, Performance.venue)
+        .order_by(Performance.region, Performance.venue)
+        .all()
+    )
+
+    grouped: Dict[str, List[str]] = {}
+    for region, venue in rows:
+        grouped.setdefault(region, []).append(venue)
+
+    return {"success": True, "message": "OK", "data": grouped}
 
 
 @router.get(
