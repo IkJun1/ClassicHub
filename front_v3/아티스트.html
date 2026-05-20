@@ -139,10 +139,10 @@
 
             <!-- 컬럼 3: 아티스트 -->
             <div class="mega-col">
-                <a href="아티스트.html?type=지휘자">지휘자</a>
-                <a href="아티스트.html?type=오케스트라">오케스트라</a>
                 <a href="아티스트.html?type=솔리스트">솔리스트</a>
-                <a href="아티스트.html?type=악장">악장</a>
+                <a href="아티스트.html?type=오케스트라">오케스트라</a>
+                <a href="아티스트.html?type=앙상블">앙상블</a>
+                <a href="아티스트.html?type=합창단">합창단</a>
             </div>
 
             <!-- 컬럼 4: 공연장 -->
@@ -163,12 +163,25 @@
             </div>
         </div>
 
-        <!-- Filter (아티스트 목록 가장 상단) -->
-        <div class="mb-8">
-            <div id="artist-filter-options" class="flex flex-wrap gap-2"></div>
-        </div>
+	        <!-- Filter (아티스트 목록 가장 상단) -->
+	        <div class="mb-8">
+	            <div id="artist-filter-options" class="flex flex-wrap gap-2"></div>
+	        </div>
+	        <div class="mb-8 max-w-xl">
+	            <label class="block text-primary/60 text-[10px] tracking-[0.28em] uppercase mb-3" for="artist-search-input">Artist Search</label>
+	            <div class="flex items-center gap-3 rounded-lg border border-white/10 bg-white/[0.03] px-4 py-3 focus-within:border-primary/60 transition-colors">
+	                <span class="material-symbols-outlined text-primary/60 text-lg">search</span>
+	                <input id="artist-search-input" class="flex-1 bg-transparent border-0 outline-none text-on-surface placeholder:text-white/20 text-sm" type="search" placeholder="아티스트 이름 또는 분류 검색" autocomplete="off"/>
+	                <button id="artist-search-clear" class="text-white/30 hover:text-primary text-xl leading-none" type="button" aria-label="검색어 지우기">×</button>
+	            </div>
+	        </div>
 
-        <div id="artist-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+	        <div class="flex items-center justify-between gap-4 mb-5">
+	            <p id="artist-page-summary" class="text-white/35 text-xs tracking-[0.08em]"></p>
+	            <div class="text-white/20 text-[10px] tracking-[0.18em] uppercase">Client paging</div>
+	        </div>
+	        <div id="artist-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+	        <div id="artist-pagination" class="flex justify-center gap-2 mt-10 flex-wrap"></div>
     </section>
 </main>
 
@@ -190,15 +203,32 @@
 <script src="main.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', async () => {
-        const API = window.ClassicHubAPI;
-        let activeFilter = '전체';
-        let artists = [];
-        let filterOptions = ['전체'];
+	        const API = window.ClassicHubAPI;
+	        let activeFilter = '전체';
+		        let artists = [];
+		        let filterOptions = ['전체'];
+		        let currentPage = 1;
+		        let searchQuery = '';
+		        const PAGE_SIZE = 30;
+		
+		        const filterOptionsEl = document.getElementById('artist-filter-options');
+		        const listEl = document.getElementById('artist-list');
+		        const summaryEl = document.getElementById('artist-page-summary');
+		        const paginationEl = document.getElementById('artist-pagination');
+		        const searchInputEl = document.getElementById('artist-search-input');
+		        const searchClearEl = document.getElementById('artist-search-clear');
 
-        const filterOptionsEl = document.getElementById('artist-filter-options');
-        const listEl = document.getElementById('artist-list');
+	        const inferArtistRole = (name, rawRole) => {
+	            if (rawRole && rawRole !== '미분류') return rawRole;
+	            const n = String(name || '').toLowerCase();
+	            if (/(orchestra|오케스트라|필하모닉|심포니|교향악단|관현악단|챔버오케스트라|앙상블|ensemble|sinfonietta|신포니에타)/i.test(n)) return '오케스트라';
+	            if (/(choir|chorus|합창단|콰이어|성가대)/i.test(n)) return '합창단';
+	            if (/(conductor|지휘)/i.test(n)) return '지휘자';
+	            if (/(quartet|trio|duo|quintet|콰르텟|트리오|듀오|중주|실내악)/i.test(n)) return '앙상블';
+	            return '솔리스트';
+	        };
 
-        const pillClass = (isActive) => {
+	        const pillClass = (isActive) => {
             const base = 'text-xs px-3 py-2 rounded-full border transition-colors';
             if (isActive) return `${base} bg-primary text-on-primary border-primary`;
             return `${base} bg-white/5 border-white/10 text-white/70 hover:text-white hover:bg-white/10`;
@@ -217,21 +247,38 @@
             });
         };
 
-        const getFilteredArtists = () => {
-            if (activeFilter === '전체') return artists;
-            return artists.filter((a) => (a.role || '미분류') === activeFilter);
-        };
+	        const getFilteredArtists = () => {
+	            const q = searchQuery.trim().toLowerCase();
+	            return artists.filter((a) => {
+	                const roleMatch = activeFilter === '전체' || (a.role || '미분류') === activeFilter;
+	                if (!roleMatch) return false;
+	                if (!q) return true;
+	                return String(a.name || '').toLowerCase().includes(q) ||
+	                    String(a.role || '').toLowerCase().includes(q) ||
+	                    String(a.rawRole || '').toLowerCase().includes(q);
+	            });
+	        };
 
-        const renderList = () => {
-            if (!listEl) return;
-            const items = getFilteredArtists();
-            if (!items.length) {
-                listEl.innerHTML = '<div class="text-white/35 text-sm">해당 역할의 아티스트 데이터가 없습니다. 현재 DB의 Artist.role 값이 비어 있을 수 있습니다.</div>';
-                return;
-            }
-            listEl.innerHTML = items.map((a, idx) => {
-                const role = a.role || '역할 미분류';
-                return `
+	        const renderList = () => {
+	            if (!listEl) return;
+	            const items = getFilteredArtists();
+	            if (!items.length) {
+		                listEl.innerHTML = '<div class="text-white/35 text-sm">조건에 맞는 아티스트 데이터가 없습니다.</div>';
+		                if (summaryEl) summaryEl.textContent = '0명';
+	                if (paginationEl) paginationEl.innerHTML = '';
+	                return;
+	            }
+	            const totalPages = Math.max(1, Math.ceil(items.length / PAGE_SIZE));
+	            if (currentPage > totalPages) currentPage = totalPages;
+	            const start = (currentPage - 1) * PAGE_SIZE;
+	            const pageItems = items.slice(start, start + PAGE_SIZE);
+	            if (summaryEl) {
+		                const suffix = searchQuery.trim() ? ` · "${searchQuery.trim()}" 검색` : '';
+		                summaryEl.textContent = `총 ${items.length.toLocaleString()}명 · ${start + 1}-${Math.min(start + PAGE_SIZE, items.length)} 표시${suffix}`;
+	            }
+	            listEl.innerHTML = pageItems.map((a, idx) => {
+	                const role = a.role || '역할 미분류';
+	                return `
                     <article class="rounded-xl bg-surface-container-low ring-1 ring-white/5 p-5">
                         <div class="flex items-center gap-4">
                             <div class="w-16 h-16 rounded-full bg-white/5 ring-1 ring-white/10 overflow-hidden flex-shrink-0 flex items-center justify-center text-primary font-headline text-xl">
@@ -246,23 +293,89 @@
                             </div>
                         </div>
                     </article>
-                `;
-            }).join('');
-        };
+	                `;
+	            }).join('');
+	            renderPagination(items.length, totalPages);
+	        };
 
-        function setFilter(filterKey) {
-            activeFilter = filterKey;
-            renderFilterOptions();
-            renderList();
-        }
+	        const pageButtonClass = (isActive) => {
+	            const base = 'min-w-8 px-3 py-2 rounded border text-xs transition-colors';
+	            if (isActive) return `${base} bg-primary text-on-primary border-primary`;
+	            return `${base} bg-transparent text-white/45 border-white/10 hover:text-white hover:border-white/30`;
+	        };
+
+	        function renderPagination(totalItems, totalPages) {
+	            if (!paginationEl) return;
+	            if (totalPages <= 1) {
+	                paginationEl.innerHTML = '';
+	                return;
+	            }
+	            const visible = Array.from({ length: totalPages }, (_, i) => i + 1)
+	                .filter(p => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 2);
+	            paginationEl.innerHTML = [
+	                `<button type="button" data-page="${currentPage - 1}" ${currentPage <= 1 ? 'disabled' : ''} class="${pageButtonClass(false)} disabled:opacity-25 disabled:cursor-not-allowed">‹</button>`,
+	                ...visible.map((p, idx) => {
+	                    const gap = idx && p - visible[idx - 1] > 1
+	                        ? '<span class="px-1 py-2 text-white/25 text-xs">…</span>'
+	                        : '';
+	                    return `${gap}<button type="button" data-page="${p}" class="${pageButtonClass(p === currentPage)}">${p}</button>`;
+	                }),
+	                `<button type="button" data-page="${currentPage + 1}" ${currentPage >= totalPages ? 'disabled' : ''} class="${pageButtonClass(false)} disabled:opacity-25 disabled:cursor-not-allowed">›</button>`,
+	            ].join('');
+	            paginationEl.querySelectorAll('[data-page]').forEach(btn => {
+	                btn.addEventListener('click', () => {
+	                    const page = Number(btn.dataset.page);
+	                    if (!page || page < 1 || page > totalPages || page === currentPage) return;
+	                    currentPage = page;
+	                    renderList();
+	                    window.scrollTo({ top: 0, behavior: 'smooth' });
+	                });
+	            });
+	        }
+
+		        function setFilter(filterKey) {
+		            activeFilter = filterKey;
+		            currentPage = 1;
+		            renderFilterOptions();
+		            renderList();
+		        }
+
+		        if (searchInputEl) {
+		            searchInputEl.addEventListener('input', () => {
+		                searchQuery = searchInputEl.value;
+		                currentPage = 1;
+		                renderList();
+		            });
+		        }
+		        if (searchClearEl) {
+		            searchClearEl.addEventListener('click', () => {
+		                searchQuery = '';
+		                if (searchInputEl) searchInputEl.value = '';
+		                currentPage = 1;
+		                renderList();
+		                searchInputEl?.focus();
+		            });
+		        }
 
         listEl.innerHTML = '<div class="text-white/35 text-sm">아티스트 데이터를 불러오는 중입니다.</div>';
         try {
             const res = await API.getArtists({});
-            artists = (res.data || [])
-                .filter(a => a.name && a.name !== 'nan')
-                .map(a => ({ id: a.id, name: a.name, role: a.role || '미분류' }));
-            const roles = [...new Set(artists.map(a => a.role || '미분류'))].sort((a, b) => a.localeCompare(b, 'ko'));
+	            artists = (res.data || [])
+	                .filter(a => a.name && a.name !== 'nan')
+	                .map(a => ({
+	                    id: a.id,
+	                    name: a.name,
+	                    role: inferArtistRole(a.name, a.role || '미분류'),
+	                    rawRole: a.role || '미분류',
+	                }));
+	            const preferredRoles = ['솔리스트', '오케스트라', '앙상블', '합창단', '지휘자'];
+	            const roles = [...new Set(artists.map(a => a.role || '솔리스트'))]
+	                .sort((a, b) => {
+	                    const ia = preferredRoles.indexOf(a);
+	                    const ib = preferredRoles.indexOf(b);
+	                    if (ia !== -1 || ib !== -1) return (ia === -1 ? 999 : ia) - (ib === -1 ? 999 : ib);
+	                    return a.localeCompare(b, 'ko');
+	                });
             filterOptions = ['전체', ...roles];
         } catch (e) {
             console.error('아티스트 목록 조회 실패:', e);

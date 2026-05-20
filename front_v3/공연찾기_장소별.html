@@ -45,20 +45,102 @@ body{background:#131313;color:#e5e2e1;font-family:'Inter',sans-serif;margin:0;}
 .region-tab.on{color:#fff;}
 .region-tab.on::after{transform:scaleX(1);}
 
-/* ── 공연장 칩 섹션 ── */
-.venue-section{
-  padding:1.6rem 3rem;
-  border-bottom:1px solid rgba(255,255,255,.06);
-  background:linear-gradient(180deg,#161616 0%,#131313 100%);
+	/* ── 공연장 선택 섹션 ── */
+	.venue-section{
+	  padding:1.6rem 3rem;
+	  border-bottom:1px solid rgba(255,255,255,.06);
+	  background:linear-gradient(180deg,#161616 0%,#131313 100%);
 }
 .venue-section-label{
   font-size:9px;
   letter-spacing:.3em;
   text-transform:uppercase;
-  color:rgba(233,195,73,.5);
-  margin-bottom:.85rem;
-}
-.venue-chips{display:flex;flex-wrap:wrap;gap:.6rem;}
+	  color:rgba(233,195,73,.5);
+	  margin-bottom:.85rem;
+	}
+	.venue-picker{position:relative;max-width:560px;}
+	.venue-select-button{
+	  width:100%;
+	  display:flex;
+	  align-items:center;
+	  justify-content:space-between;
+	  gap:1rem;
+	  padding:.9rem 1rem;
+	  border:1px solid rgba(255,255,255,.12);
+	  border-radius:8px;
+	  background:rgba(255,255,255,.035);
+	  color:rgba(255,255,255,.82);
+	  cursor:pointer;
+	  transition:border-color .18s,background .18s;
+	  text-align:left;
+	}
+	.venue-select-button:hover,
+	.venue-picker.open .venue-select-button{
+	  border-color:rgba(233,195,73,.55);
+	  background:rgba(233,195,73,.06);
+	}
+	.venue-selected-name{
+	  font-family:'Noto Serif KR',serif;
+	  font-size:15px;
+	  overflow:hidden;
+	  text-overflow:ellipsis;
+	  white-space:nowrap;
+	}
+	.venue-selected-meta{
+	  flex-shrink:0;
+	  font-size:10px;
+	  letter-spacing:.12em;
+	  color:rgba(233,195,73,.55);
+	  text-transform:uppercase;
+	}
+	.venue-dropdown{
+	  position:absolute;
+	  top:calc(100% + 8px);
+	  left:0;
+	  right:0;
+	  z-index:30;
+	  display:none;
+	  border:1px solid rgba(233,195,73,.22);
+	  border-radius:10px;
+	  background:#181817;
+	  box-shadow:0 18px 50px rgba(0,0,0,.48);
+	  overflow:hidden;
+	}
+	.venue-picker.open .venue-dropdown{display:block;}
+	.venue-search-wrap{padding:.8rem;border-bottom:1px solid rgba(255,255,255,.06);}
+	.venue-search{
+	  width:100%;
+	  border:1px solid rgba(255,255,255,.1);
+	  border-radius:7px;
+	  background:#101010;
+	  color:#e5e2e1;
+	  padding:.72rem .85rem;
+	  font-size:13px;
+	  outline:none;
+	}
+	.venue-search:focus{border-color:rgba(233,195,73,.55);}
+	.venue-options{max-height:320px;overflow-y:auto;padding:.35rem;}
+	.venue-option{
+	  width:100%;
+	  display:flex;
+	  align-items:center;
+	  justify-content:space-between;
+	  gap:1rem;
+	  padding:.7rem .75rem;
+	  border:0;
+	  border-radius:6px;
+	  background:transparent;
+	  color:rgba(255,255,255,.62);
+	  cursor:pointer;
+	  text-align:left;
+	  font-size:12px;
+	}
+	.venue-option:hover,
+	.venue-option.active{background:rgba(233,195,73,.08);color:#e9c349;}
+	.venue-option-count{font-size:10px;color:rgba(255,255,255,.26);white-space:nowrap;}
+	.venue-option-empty{padding:1.4rem .9rem;color:rgba(255,255,255,.35);font-size:12px;text-align:center;}
+	.venue-dropdown-hint{padding:.55rem .85rem;border-top:1px solid rgba(255,255,255,.05);font-size:10px;color:rgba(255,255,255,.28);}
+	.venue-chips{display:flex;flex-wrap:wrap;gap:.6rem;}
 
 .chip{
   display:inline-flex;
@@ -201,7 +283,7 @@ body{background:#131313;color:#e5e2e1;font-family:'Inter',sans-serif;margin:0;}
         <div class="mega-inner">
             <div class="mega-col"><a href="공연찾기_장르별.html">장르별 조회</a><a href="공연찾기_장소별.html">장소별 조회</a><a href="공연찾기_기간별.html">기간별 조회</a></div>
             <div class="mega-col"><a href="작곡가.html?era=바로크">바로크</a><a href="작곡가.html?era=고전">고전</a><a href="작곡가.html?era=낭만">낭만</a><a href="작곡가.html?era=근현대">근현대</a></div>
-            <div class="mega-col"><a href="아티스트.html?type=지휘자">지휘자</a><a href="아티스트.html?type=오케스트라">오케스트라</a><a href="아티스트.html?type=솔리스트">솔리스트</a><a href="아티스트.html?type=악장">악장</a></div>
+            <div class="mega-col"><a href="아티스트.html?type=솔리스트">솔리스트</a><a href="아티스트.html?type=오케스트라">오케스트라</a><a href="아티스트.html?type=앙상블">앙상블</a><a href="아티스트.html?type=합창단">합창단</a></div>
             <div class="mega-col"><a href="공연장.html">공연장 조회</a></div>
         </div>
     </div>
@@ -222,11 +304,23 @@ body{background:#131313;color:#e5e2e1;font-family:'Inter',sans-serif;margin:0;}
         <div id="region-tabs" class="region-tabs" style="border-bottom:1px solid rgba(255,255,255,.07);padding-bottom:0;"></div>
     </div>
 
-    <!-- 공연장 칩 -->
-    <div class="venue-section" id="venue-section">
-        <p class="venue-section-label">공연장 선택</p>
-        <div class="venue-chips" id="venue-chips"></div>
-    </div>
+	    <!-- 공연장 드롭다운 -->
+	    <div class="venue-section" id="venue-section">
+	        <p class="venue-section-label">공연장 선택</p>
+	        <div class="venue-picker" id="venue-picker">
+	            <button class="venue-select-button" id="venue-select-button" type="button" aria-haspopup="listbox" aria-expanded="false">
+	                <span class="venue-selected-name" id="venue-selected-name">공연장을 불러오는 중입니다</span>
+	                <span class="venue-selected-meta" id="venue-selected-meta"></span>
+	            </button>
+	            <div class="venue-dropdown" id="venue-dropdown">
+	                <div class="venue-search-wrap">
+	                    <input class="venue-search" id="venue-search" type="search" placeholder="공연장 이름으로 검색" autocomplete="off"/>
+	                </div>
+	                <div class="venue-options" id="venue-options" role="listbox"></div>
+	                <div class="venue-dropdown-hint">지역을 먼저 선택한 뒤 공연장을 검색하거나 선택하세요.</div>
+	            </div>
+	        </div>
+	    </div>
 
     <!-- 결과 그리드 -->
     <div style="padding:1.8rem 3rem 4rem;">
@@ -269,14 +363,20 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     let venuesByRegion = {};
     let regions = [];
-    let activeRegion = null;
-    let activeVenue = null;
-    let activeStatus = '공연예정';
-    let currentPage = 1;
-
-    const regionTabsEl = document.getElementById('region-tabs');
-    const venueChipsEl = document.getElementById('venue-chips');
-    const gridEl = document.getElementById('concert-grid');
+	    let activeRegion = null;
+	    let activeVenue = null;
+	    let activeStatus = '공연예정';
+	    let venueSearchTerm = '';
+	    let currentPage = 1;
+	
+	    const regionTabsEl = document.getElementById('region-tabs');
+	    const venuePickerEl = document.getElementById('venue-picker');
+	    const venueSelectBtn = document.getElementById('venue-select-button');
+	    const venueSelectedNameEl = document.getElementById('venue-selected-name');
+	    const venueSelectedMetaEl = document.getElementById('venue-selected-meta');
+	    const venueSearchEl = document.getElementById('venue-search');
+	    const venueOptionsEl = document.getElementById('venue-options');
+	    const gridEl = document.getElementById('concert-grid');
     const paginEl = document.getElementById('pagination');
     const resultCountEl = document.getElementById('result-count');
     const statusFiltersEl = document.getElementById('status-filters');
@@ -331,40 +431,95 @@ document.addEventListener('DOMContentLoaded', async () => {
             const btn = document.createElement('button');
             btn.className = 'region-tab' + (region === activeRegion ? ' on' : '');
             btn.textContent = region;
-            btn.addEventListener('click', () => {
-                activeRegion = region;
-                activeVenue = venuesByRegion[activeRegion]?.[0] || null;
-                currentPage = 1;
-                renderRegionTabs();
-                renderVenueChips();
-                renderGrid();
-            });
+	            btn.addEventListener('click', () => {
+	                activeRegion = region;
+	                activeVenue = venuesByRegion[activeRegion]?.[0] || null;
+	                venueSearchTerm = '';
+	                currentPage = 1;
+	                renderRegionTabs();
+	                renderVenuePicker();
+	                renderGrid();
+	            });
             regionTabsEl.appendChild(btn);
         });
     }
 
-    function renderVenueChips() {
-        if (!venueChipsEl) return;
-        venueChipsEl.innerHTML = '';
-        const venues = venuesByRegion[activeRegion] || [];
-        if (!venues.length) {
-            venueChipsEl.innerHTML = '<span style="color:rgba(255,255,255,.35);font-size:12px;">선택한 지역의 공연장 목록이 없습니다.</span>';
-            return;
-        }
-        if (!activeVenue || !venues.includes(activeVenue)) activeVenue = venues[0];
-        venues.forEach(v => {
-            const chip = document.createElement('button');
-            chip.className = 'chip' + (v === activeVenue ? ' active' : '');
-            chip.innerHTML = `<span class="chip-dot"></span>${getVenueLabel(v)}`;
-            chip.addEventListener('click', () => {
-                activeVenue = v;
-                currentPage = 1;
-                renderVenueChips();
-                renderGrid();
-            });
-            venueChipsEl.appendChild(chip);
-        });
-    }
+	    function setVenueDropdownOpen(open) {
+	        if (!venuePickerEl || !venueSelectBtn) return;
+	        venuePickerEl.classList.toggle('open', open);
+	        venueSelectBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+	        if (open) {
+	            setTimeout(() => venueSearchEl?.focus(), 30);
+	        }
+	    }
+
+	    function getFilteredVenues() {
+	        const venues = venuesByRegion[activeRegion] || [];
+	        const q = venueSearchTerm.trim().toLowerCase();
+	        if (!q) return venues;
+	        return venues.filter(v => String(v).toLowerCase().includes(q));
+	    }
+
+	    function renderVenuePicker() {
+	        const venues = venuesByRegion[activeRegion] || [];
+	        if (!venueSelectedNameEl || !venueSelectedMetaEl || !venueOptionsEl) return;
+	        if (!venues.length) {
+	            activeVenue = null;
+	            venueSelectedNameEl.textContent = '선택한 지역의 공연장이 없습니다';
+	            venueSelectedMetaEl.textContent = '';
+	            venueOptionsEl.innerHTML = '<div class="venue-option-empty">공연장 목록이 없습니다.</div>';
+	            return;
+	        }
+	        if (!activeVenue || !venues.includes(activeVenue)) activeVenue = venues[0];
+	        venueSelectedNameEl.textContent = activeVenue;
+	        venueSelectedMetaEl.textContent = `${activeRegion || ''} · ${venues.length}개`;
+	        if (venueSearchEl && venueSearchEl.value !== venueSearchTerm) venueSearchEl.value = venueSearchTerm;
+	        renderVenueOptions();
+	    }
+
+	    function renderVenueOptions() {
+	        if (!venueOptionsEl) return;
+	        const filtered = getFilteredVenues();
+	        if (!filtered.length) {
+	            venueOptionsEl.innerHTML = '<div class="venue-option-empty">검색 결과가 없습니다.</div>';
+	            return;
+	        }
+	        venueOptionsEl.innerHTML = filtered.map(v => `
+	            <button type="button" class="venue-option ${v === activeVenue ? 'active' : ''}" data-venue="${API.escapeHTML(v)}" role="option" aria-selected="${v === activeVenue ? 'true' : 'false'}">
+	                <span>${API.escapeHTML(v)}</span>
+	                ${v === activeVenue ? '<span class="venue-option-count">선택됨</span>' : ''}
+	            </button>
+	        `).join('');
+	        venueOptionsEl.querySelectorAll('[data-venue]').forEach(btn => {
+	            btn.addEventListener('click', () => {
+	                activeVenue = btn.dataset.venue;
+	                venueSearchTerm = '';
+	                if (venueSearchEl) venueSearchEl.value = '';
+	                currentPage = 1;
+	                setVenueDropdownOpen(false);
+	                renderVenuePicker();
+	                renderGrid();
+	            });
+	        });
+	    }
+
+	    if (venueSelectBtn) {
+	        venueSelectBtn.addEventListener('click', () => {
+	            setVenueDropdownOpen(!venuePickerEl.classList.contains('open'));
+	        });
+	    }
+	    if (venueSearchEl) {
+	        venueSearchEl.addEventListener('input', () => {
+	            venueSearchTerm = venueSearchEl.value;
+	            renderVenueOptions();
+	        });
+	        venueSearchEl.addEventListener('keydown', (e) => {
+	            if (e.key === 'Escape') setVenueDropdownOpen(false);
+	        });
+	    }
+	    document.addEventListener('click', (e) => {
+	        if (venuePickerEl && !venuePickerEl.contains(e.target)) setVenueDropdownOpen(false);
+	    });
 
     function getStatusClass(s) {
         if (s === '공연예정') return 'upcoming';
@@ -539,11 +694,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    await loadVenuesByRegion();
-    renderRegionTabs();
-    renderVenueChips();
-    renderStatusFilters();
-    renderGrid();
+	    await loadVenuesByRegion();
+	    renderRegionTabs();
+	    renderVenuePicker();
+	    renderStatusFilters();
+	    renderGrid();
 });
 </script>
 

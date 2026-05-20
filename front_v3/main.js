@@ -42,6 +42,20 @@
         if (h) return `${h}시간`;
         return `${m}분`;
     };
+    const normalizeISODate = (date) => {
+        if (!date) return '';
+        const match = String(date).match(/\d{4}-\d{2}-\d{2}/);
+        return match ? match[0] : '';
+    };
+    const derivePerformanceStatus = (startDate, endDate, fallbackStatus = '') => {
+        const start = normalizeISODate(startDate);
+        const end = normalizeISODate(endDate) || start;
+        if (!start) return fallbackStatus || '';
+        const today = todayISO();
+        if (today < start) return '공연예정';
+        if (today > end) return '공연완료';
+        return '공연중';
+    };
 
     async function request(path, params, options = {}) {
         const query = params ? toQuery(params) : '';
@@ -61,6 +75,7 @@
         const dates = Array.isArray(p.dates) ? p.dates : [];
         const start = p.start_date || p.date || dates[0] || '';
         const end = p.end_date || dates[dates.length - 1] || start;
+        const displayStatus = derivePerformanceStatus(start, end, p.status || fallbackStatus);
         return {
             id: p.id,
             title: p.title || '',
@@ -71,7 +86,8 @@
             venue: p.venue || '',
             genre: typeof p.genre === 'string' ? p.genre : (p.genre?.name || ''),
             poster: p.poster_url || p.img || '',
-            status: p.status || fallbackStatus,
+            status: displayStatus,
+            rawStatus: p.status || fallbackStatus,
             runtime: p.runtime || runtimeText(p.runtime_min),
             cast: p.artists ? p.artists.map(a => a.artist || a.name).filter(Boolean).join(', ') : '',
             age: p.age_rating || '',
@@ -125,6 +141,7 @@
         getBookmarks: (firebase_uid) => request(`/bookmarks/${encodeURIComponent(firebase_uid)}`),
         normalizePerformanceSummary,
         normalizePerformanceDetail,
+        derivePerformanceStatus,
         displayDate,
         todayISO,
         escapeHTML,

@@ -139,10 +139,10 @@
 
             <!-- 컬럼 3: 아티스트 -->
             <div class="mega-col">
-                <a href="아티스트.html?type=지휘자">지휘자</a>
-                <a href="아티스트.html?type=오케스트라">오케스트라</a>
                 <a href="아티스트.html?type=솔리스트">솔리스트</a>
-                <a href="아티스트.html?type=악장">악장</a>
+                <a href="아티스트.html?type=오케스트라">오케스트라</a>
+                <a href="아티스트.html?type=앙상블">앙상블</a>
+                <a href="아티스트.html?type=합창단">합창단</a>
             </div>
 
             <!-- 컬럼 4: 공연장 -->
@@ -200,8 +200,45 @@
 
         const filterOptionsEl = document.getElementById('composer-filter-options');
         const listEl = document.getElementById('composer-list');
-        const ddBtn = document.getElementById('nav-dd-btn-comp');
-        const ddMenu = document.getElementById('nav-dd-menu-comp');
+	        const ddBtn = document.getElementById('nav-dd-btn-comp');
+	        const ddMenu = document.getElementById('nav-dd-menu-comp');
+	        const escapeHTML = (value) => String(value ?? '')
+	            .replace(/&/g, '&amp;')
+	            .replace(/</g, '&lt;')
+	            .replace(/>/g, '&gt;')
+	            .replace(/"/g, '&quot;')
+	            .replace(/'/g, '&#039;');
+	        const composerEraMap = {
+	            Bach: '바로크',
+	            Handel: '바로크',
+	            Vivaldi: '바로크',
+	            Haydn: '고전',
+	            Mozart: '고전',
+	            Beethoven: '고전',
+	            Schubert: '낭만',
+	            Chopin: '낭만',
+	            Schumann: '낭만',
+	            Brahms: '낭만',
+	            Liszt: '낭만',
+	            Tchaikovsky: '낭만',
+	            Dvorak: '낭만',
+	            Debussy: '근현대',
+	            Ravel: '근현대',
+	            Stravinsky: '근현대',
+	            Prokofiev: '근현대',
+	            Shostakovich: '근현대',
+	            Rachmaninoff: '근현대',
+	            Mahler: '근현대',
+	            Sibelius: '근현대',
+	            'Richard Strauss': '근현대',
+	        };
+	        const inferComposerEra = (name, rawEra) => {
+	            if (rawEra && rawEra !== '미분류') return rawEra;
+	            const normalized = String(name || '').toLowerCase();
+	            const matched = Object.entries(composerEraMap)
+	                .find(([composer]) => normalized.includes(composer.toLowerCase()));
+	            return matched ? matched[1] : '근현대';
+	        };
 
         const periodToFilterKey = (period) => periodOptions.includes(period) ? period : '전체';
         const pillClass = (isActive) => {
@@ -234,18 +271,26 @@
                 return;
             }
 
-            listEl.innerHTML = items.map((c) => `
-                <article class="rounded-xl bg-surface-container-low ring-1 ring-white/5 p-6">
+            listEl.innerHTML = items.map((c) => {
+                const composerName = c.name || '';
+                const href = `공연찾기_장르별.html?composer=${encodeURIComponent(composerName)}`;
+                return `
+                <a href="${href}" class="block rounded-xl bg-surface-container-low ring-1 ring-white/5 p-6 transition-all duration-200 hover:-translate-y-1 hover:bg-surface-container hover:ring-primary/35 focus:outline-none focus:ring-2 focus:ring-primary/70" aria-label="${escapeHTML(composerName)} 작품이 있는 공연 보기">
                     <div class="flex items-center justify-between mb-3">
-                        <span class="text-primary text-[10px] tracking-widest uppercase font-bold">${c.era || '미분류'}</span>
+                        <span class="text-primary text-[10px] tracking-widest uppercase font-bold">${escapeHTML(c.era || '미분류')}</span>
                         <span class="text-white/40 text-xs">${c.work_count || 0} works</span>
                     </div>
-                    <h2 class="font-headline text-2xl text-on-surface mb-3 leading-tight">${c.name}</h2>
+                    <h2 class="font-headline text-2xl text-on-surface mb-3 leading-tight">${escapeHTML(composerName)}</h2>
                     <p class="text-sm text-on-surface-variant font-light leading-relaxed">
                         DB에 등록된 작품 ${c.work_count || 0}개와 연결된 작곡가입니다.
                     </p>
-                </article>
-            `).join('');
+                    <p class="mt-5 inline-flex items-center gap-2 text-[10px] tracking-[0.22em] uppercase text-primary/80">
+                        공연 보기
+                        <span class="material-symbols-outlined text-sm" aria-hidden="true">arrow_forward</span>
+                    </p>
+                </a>
+            `;
+            }).join('');
         };
 
         function setFilter(period) {
@@ -266,13 +311,21 @@
         listEl.innerHTML = '<div class="text-white/35 text-sm">작곡가 데이터를 불러오는 중입니다.</div>';
         try {
             const res = await API.getComposers({});
-            composers = (res.data || []).map(c => ({
-                id: c.id,
-                name: c.name,
-                era: c.era || '미분류',
-                work_count: c.work_count || 0,
-            }));
-            const eras = [...new Set(composers.map(c => c.era || '미분류'))].sort((a, b) => a.localeCompare(b, 'ko'));
+	            composers = (res.data || []).map(c => ({
+	                id: c.id,
+	                name: c.name,
+	                era: inferComposerEra(c.name, c.era),
+	                rawEra: c.era || '미분류',
+	                work_count: c.work_count || 0,
+	            }));
+            const eraOrder = ['바로크', '고전', '낭만', '근현대', '미분류'];
+            const eras = [...new Set(composers.map(c => c.era || '미분류'))]
+                .sort((a, b) => {
+                    const ia = eraOrder.indexOf(a);
+                    const ib = eraOrder.indexOf(b);
+                    if (ia !== -1 || ib !== -1) return (ia === -1 ? 999 : ia) - (ib === -1 ? 999 : ib);
+                    return a.localeCompare(b, 'ko');
+                });
             periodOptions = ['전체', ...eras];
         } catch (e) {
             console.error('작곡가 목록 조회 실패:', e);

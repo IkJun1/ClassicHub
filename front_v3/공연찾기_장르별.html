@@ -103,7 +103,7 @@ body{background:#131313;color:#e5e2e1;font-family:'Inter',sans-serif;margin:0;}
         <div class="mega-inner">
             <div class="mega-col"><a href="공연찾기_장르별.html">장르별 조회</a><a href="공연찾기_장소별.html">장소별 조회</a><a href="공연찾기_기간별.html">기간별 조회</a></div>
             <div class="mega-col"><a href="작곡가.html?era=바로크">바로크</a><a href="작곡가.html?era=고전">고전</a><a href="작곡가.html?era=낭만">낭만</a><a href="작곡가.html?era=근현대">근현대</a></div>
-            <div class="mega-col"><a href="아티스트.html?type=지휘자">지휘자</a><a href="아티스트.html?type=오케스트라">오케스트라</a><a href="아티스트.html?type=솔리스트">솔리스트</a><a href="아티스트.html?type=악장">악장</a></div>
+            <div class="mega-col"><a href="아티스트.html?type=솔리스트">솔리스트</a><a href="아티스트.html?type=오케스트라">오케스트라</a><a href="아티스트.html?type=앙상블">앙상블</a><a href="아티스트.html?type=합창단">합창단</a></div>
             <div class="mega-col"><a href="공연장.html">공연장 조회</a></div>
         </div>
     </div>
@@ -163,7 +163,9 @@ document.addEventListener("DOMContentLoaded", async function () {
     let genres = [{ key: '', label: '전체' }];
     let activeGenre = '';
     let currentPage = 1;
-    const searchQuery = new URLSearchParams(location.search).get('q') || '';
+    const urlParams = new URLSearchParams(location.search);
+    const searchQuery = urlParams.get('q') || '';
+    const composerQuery = urlParams.get('composer') || '';
 
     const tabsEl   = document.getElementById('genre-tabs');
     const gridEl   = document.getElementById('concert-grid');
@@ -191,15 +193,16 @@ document.addEventListener("DOMContentLoaded", async function () {
             ];
         }
 
-        const paramGenre = new URLSearchParams(location.search).get('genre');
+        const paramGenre = urlParams.get('genre');
         if (paramGenre && genres.some(g => g.key === paramGenre)) activeGenre = paramGenre;
-        if (searchQuery) activeGenre = '';
+        if (searchQuery || composerQuery) activeGenre = '';
     }
 
-    async function fetchConcerts({ genre, q, page, size }) {
+    async function fetchConcerts({ genre, q, composer, page, size }) {
         const params = { page, per_page: size, status: '공연예정' };
         if (genre) params.genre = genre;
         if (q) params.keyword = q;
+        if (composer) params.composer = composer;
         const res = await API.getPerformances(params);
         return {
             total: res.total || 0,
@@ -325,9 +328,21 @@ document.addEventListener("DOMContentLoaded", async function () {
         countEl.textContent = '조회 중...';
         gridEl.innerHTML = '<div class="empty">공연 정보를 불러오는 중입니다.</div>';
         try {
-            const d = await fetchConcerts({ genre: activeGenre, q: searchQuery, page: currentPage, size: PAGE_SIZE });
+            const d = await fetchConcerts({
+                genre: activeGenre,
+                q: searchQuery,
+                composer: composerQuery,
+                page: currentPage,
+                size: PAGE_SIZE
+            });
             countEl.textContent = `총 ${d.total}개`;
-            labelEl.textContent = searchQuery ? `"${searchQuery}" 검색 결과` : (activeGenre || '전체');
+            if (composerQuery) {
+                labelEl.textContent = activeGenre
+                    ? `${composerQuery} · ${activeGenre} 공연`
+                    : `${composerQuery} 작품 공연`;
+            } else {
+                labelEl.textContent = searchQuery ? `"${searchQuery}" 검색 결과` : (activeGenre || '전체');
+            }
             if (!d.items.length) {
                 gridEl.innerHTML = '<div class="empty">조건에 맞는 공연이 없습니다.</div>';
                 paginEl.innerHTML = '';
