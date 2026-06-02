@@ -10,35 +10,27 @@ PostgreSQL로 전환 시:
     SQLALCHEMY_DATABASE_URL = "postgresql://user:password@host:port/dbname"
     create_engine() 에서 connect_args 제거
 """
-from sqlalchemy import create_engine, event
+from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, DeclarativeBase
 
 import os
+from dotenv import load_dotenv
 
-# ── DB 파일 경로 ─────────────────────────────────────────────────────────────
-# 백엔드 서버가 프로젝트 루트의 db/ 폴더 안의 db 파일을 올바르게 바라보도록 절대경로 할당
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DB_PATH = os.path.join(BASE_DIR, "db", "performance_platform.db")
-SQLALCHEMY_DATABASE_URL = f"sqlite:///{DB_PATH}"
+# .env 파일 로드
+load_dotenv()
 
+# ── DB 설정 ─────────────────────────────────────────────────────────────
+SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL")
+
+# 방어 로직: postgres:// 로 시작하면 postgresql:// 로 치환
+if SQLALCHEMY_DATABASE_URL and SQLALCHEMY_DATABASE_URL.startswith("postgres://"):
+    SQLALCHEMY_DATABASE_URL = SQLALCHEMY_DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
 # ── 엔진 생성 ────────────────────────────────────────────────────────────────
-# SQLite는 기본적으로 단일 스레드용이므로 check_same_thread=False 설정
-# FastAPI는 멀티스레드 환경이므로 이 옵션이 반드시 필요
+# PostgreSQL 연결 (SQLite 전용인 check_same_thread=False 제거)
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL,
-    connect_args={"check_same_thread": False},
 )
-
-
-# ── SQLite 외래키 제약 활성화 ─────────────────────────────────────────────────
-# SQLite는 기본적으로 FK 제약이 비활성화되어 있음
-# 이를 켜야 CASCADE DELETE 등이 정상 동작함
-@event.listens_for(engine, "connect")
-def set_sqlite_pragma(dbapi_connection, connection_record):
-    cursor = dbapi_connection.cursor()
-    cursor.execute("PRAGMA foreign_keys=ON")
-    cursor.close()
 
 
 # ── 세션 팩토리 ──────────────────────────────────────────────────────────────
