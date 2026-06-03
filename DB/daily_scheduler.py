@@ -4,10 +4,13 @@ from datetime import datetime, timedelta
 import os
 from dotenv import load_dotenv 
 
+# 루트 디렉토리의 .env 파일을 명시적으로 로드
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ENV_PATH = os.path.join(BASE_DIR, '.env')
+load_dotenv(dotenv_path=ENV_PATH)
+
 from 클래식_크롤링_리팩토링 import KopisCrawler
 from etl_loader import run_etl_process
-
-load_dotenv()
 
 def daily_batch_job():
     print(f"\n{'='*50}")

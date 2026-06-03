@@ -2,8 +2,9 @@ import os
 from dotenv import load_dotenv
 from sqlalchemy import create_engine, text
 
-# 대표님께서 찾아주신 정확한 .env 파일의 절대 경로를 직접 주입합니다.
-env_path = r"C:\Users\user\.gemini\antigravity\worktrees\ClassicHub\migrate-sqlite-to-supabase\backend__v3\.env"
+# 프로젝트 루트의 .env 경로를 동적으로 계산하여 로드합니다.
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+env_path = os.path.join(BASE_DIR, '.env')
 load_dotenv(dotenv_path=env_path)
 
 # .env 파일에서 DB 주소를 가져옵니다.

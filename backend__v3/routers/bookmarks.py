@@ -30,23 +30,8 @@ def add_bookmark(
     # 🚨 보안: 프론트가 보낸 body.firebase_uid 대신 위조 불가능한 토큰의 UID 사용
     uid = current_user["firebase_uid"]
 
-    # 1. User 테이블 UPSERT (SQLAlchemy 방식)
-    user = db.query(User).filter(User.firebase_uid == uid).first()
-    if user:
-        # 이미 존재하면 이메일과 닉네임 최신화 (Stale Data 방지)
-        user.email = current_user["email"]
-        user.nickname = current_user["nickname"]
-    else:
-        # 최초 접근이면 신규 유저 생성
-        user = User(
-            firebase_uid=uid, 
-            email=current_user["email"], 
-            nickname=current_user["nickname"]
-        )
-        db.add(user)
-    
-    # User 정보를 DB에 확정 (외래 키 제약 조건 통과를 위해)
-    db.commit() 
+    # 1. User 테이블 동기화(UPSERT)는 이제 get_current_user 미들웨어에서
+    # 중앙 집중식으로 자동 처리되므로, 이곳의 중복 코드를 제거했습니다.
 
     # 2. 공연 존재 여부 검증
     perf = db.query(Performance).filter(Performance.id == body.performance_id).first()

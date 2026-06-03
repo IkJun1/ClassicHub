@@ -7,6 +7,11 @@ from firebase_admin.auth import RevokedIdTokenError, ExpiredIdTokenError
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
+from sqlalchemy.orm import Session
+from sqlalchemy.dialects.postgresql import insert
+from database import get_db
+from models import User
+
 cred_path = os.environ.get("FIREBASE_CREDENTIALS_PATH", "serviceAccountKey.json")
 
 if not firebase_admin._apps:
@@ -19,14 +24,34 @@ if not firebase_admin._apps:
 
 security = HTTPBearer()
 
-async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
+async def get_current_user(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    db: Session = Depends(get_db)
+):
     token = credentials.credentials
     try:
         decoded_token = firebase_auth.verify_id_token(token, check_revoked=True)
+        uid = decoded_token["uid"]
+        email = decoded_token.get("email", "")
+        nickname = decoded_token.get("name", "ClassicHub_User")
+
+        # 🚨 [최적화] Firebase JWT 검증 직후 Supabase DB 강제 동기화 (UPSERT)
+        # 인증이 필요한 모든 API 호출 시, DB에 유저 레코드가 존재함을 100% 보장하여 외래키 충돌 방지
+        stmt = insert(User).values(
+            firebase_uid=uid,
+            email=email,
+            nickname=nickname
+        ).on_conflict_do_update(
+            index_elements=['firebase_uid'],
+            set_={'email': email, 'nickname': nickname}
+        )
+        db.execute(stmt)
+        db.commit()
+
         return {
-            "firebase_uid": decoded_token["uid"],
-            "email": decoded_token.get("email", ""),
-            "nickname": decoded_token.get("name", "ClassicHub_User")
+            "firebase_uid": uid,
+            "email": email,
+            "nickname": nickname
         }
 
     except RevokedIdTokenError:

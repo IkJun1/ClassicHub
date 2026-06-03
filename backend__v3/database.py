@@ -16,8 +16,10 @@ from sqlalchemy.orm import sessionmaker, DeclarativeBase
 import os
 from dotenv import load_dotenv
 
-# .env 파일 로드
-load_dotenv()
+# 프로젝트 루트의 .env 경로를 동적으로 계산하여 로드
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ENV_PATH = os.path.join(BASE_DIR, '.env')
+load_dotenv(dotenv_path=ENV_PATH)
 
 # ── DB 설정 ─────────────────────────────────────────────────────────────
 SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL")
