@@ -220,7 +220,9 @@ class KopisCrawler:
             print(f"최종 통합 수집 완료! 총 {len(final_df)}건 -> '{output_filename}'")
 
 if __name__ == "__main__":
-    load_dotenv()
+    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    ENV_PATH = os.path.join(BASE_DIR, '.env')
+    load_dotenv(dotenv_path=ENV_PATH)
 
     api_key = os.getenv("KOPIS_API_KEY")
     if not api_key:
