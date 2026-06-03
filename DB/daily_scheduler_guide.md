@@ -88,6 +88,11 @@
 * **Secret:** 공공데이터포털 KOPIS API 키값.
 * [Add secret]을 클릭하여 저장.
 
+4. **스케줄러 정상 작동 수동 테스트:**
+   ➔ 깃허브 상단 [Actions] 탭 클릭.
+   ➔ 왼쪽 메뉴에서 [KOPIS Daily ETL Pipeline] (또는 워크플로우 이름) 클릭.
+   ➔ 오른쪽 화면에서 회색 [Run workflow] 버튼 클릭 후 초록색 [Run workflow] 다시 클릭.
+
 
 ---
 
