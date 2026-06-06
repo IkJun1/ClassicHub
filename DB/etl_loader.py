@@ -28,6 +28,7 @@ from database import engine, SessionLocal
 from models import Genre, Composer, Work, Artist, Performance, PerformanceArtist, PerformanceWork
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy import select, delete
+from sqlalchemy.sql import func
 
 # ─────────────────────────────────────────────────────────────────────────────
 # [고도화 전략 1] 마스터 사전 및 설정
@@ -314,7 +315,8 @@ def run_etl_process():
                     'poster_url': update_dict.poster_url,
                     'detail_image_url': update_dict.detail_image_url,
                     'reservation_url': update_dict.reservation_url,
-                    'status': update_dict.status
+                    'status': update_dict.status,
+                    'updated_at': func.now()
                 }
             ).returning(Performance.id)
             

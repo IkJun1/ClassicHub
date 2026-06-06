@@ -16,6 +16,7 @@ DB 스키마 기준: ERD_v2 (PascalCase 테이블명)
     └─ 1:N ─ User_Bookmark (찜한 공연)
 """
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Table
+from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from database import Base
 
@@ -131,6 +132,7 @@ class Performance(Base):
     reservation_url  = Column(String,  nullable=True)
     # ETL이 KOPIS 원문 한국어 값을 저장하므로 기본값도 한국어 기준으로 맞춤
     status           = Column(String,  nullable=True, default="공연예정")
+    updated_at       = Column(DateTime, nullable=True, server_default=func.now(), onupdate=func.now())
 
     genre             = relationship("Genre", back_populates="performances")
     performance_artists = relationship(
